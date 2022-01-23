@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Fantasy Map Maker</title>
+	<link rel="stylesheet" href="styles/index.css" />
+</head>
+
+<body>
+	<header>
+		<h1>Fantasy Map Maker</h1>
+		
+		<div class="wrapping-panel">
+			
+			<div class="menu" id="new-map-actions">
+				<button type="button" class="menu-item" disabled>Открыть файл</button>
+		
+				<span>или</span>
+		
+				<form name="new-size">
+					<button type="submit" class="menu-item">Новая карта</button>
+					<input type="number" min="80" max="1920" step="1" value="640"
+						title="Ширина холста"
+						name="width" id="new-width"
+					/>
+					<label for="new-height">×</label>
+					<input type="number" min="80" max="1920" step="1" value="640"
+						title="Высота холста"
+						name="height" id="new-height"
+					/>	
+				</form>	
+			</div>
+			
+			<div class="menu" id="open-map-actions" hidden>
+				
+				<button type="button" class="menu-item" disabled>Сохранить файл</button>
+				<a class="menu-item" role="button" download="map.svg">Экспорт SVG</a>	
+				<button type="button" class="menu-item" data-action="close-map" >Закрыть</button>
+			</div>	
+		</div>
+		
+		<div class="menu" id="scale-actions" hidden>
+			<label for="scale">Масштаб</label>
+			<select id="scale" disabled>
+				<option value="0.5">50%</option>
+				<option value="1" selected>100%</option>
+				<option value="2">200%</option>
+				<option value="5">500%</option>
+			</select>
+		</div>
+
+	</header>
+	
+	<aside class="toolbar">
+		
+	</aside>
+
+	<main>
+		<div class="container">
+			<canvas id="drawing-canvas" width="640" height="640"></canvas>
+		</div>
+	</main>
+
+	<script type="module" src="scripts/index.js"></script>
+</body>
+</html>

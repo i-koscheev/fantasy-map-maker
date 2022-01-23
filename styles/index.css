@@ -1,0 +1,236 @@
+html {
+	--light-gray: #D6D6D6;
+	--dark-gray: #999999;
+	--border-color: #646464;
+	--text-color: #141414;
+	--accent-color: #6666aa;
+	--button-color: #EFEFEF;
+	--disabled-color: #CFCFCF;
+	--highlight-color: #5b5bff;
+
+	font-size: 16px;
+}
+
+body
+{
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	width: 100vw;
+	height: 100vh;
+	line-height: 1;
+
+	font-family: Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
+	background-color: var(--dark-gray);
+}
+
+header {
+	flex-shrink: 0;
+	
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	overflow: hidden;
+	column-gap: 1rem;
+	padding: 1rem;
+	
+	font-size: 1rem;
+	text-align: center;
+	color: var(--text-color);
+	background: var(--light-gray);	
+	user-select: none;
+}
+
+header > h1
+{
+	flex-shrink: 2;
+	margin: 0 0.5rem;
+	padding: 0 1rem 0 0;
+	line-height: 2rem;
+	
+	font-size: 1.25rem;
+	font-weight: normal;
+	border-right: 1px solid var(--accent-color);
+	color: var(--accent-color); 
+}
+
+.wrapping-panel {
+	flex-grow: 1;
+
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	column-gap: 1rem;
+	row-gap: 1rem;
+}
+
+/* =================================
+ * Меню и элементы меню
+ * =================================
+ */
+
+.menu
+{
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	column-gap: 1rem;
+	row-gap: 0.75rem;
+}
+
+.menu[hidden]
+{
+	display: none;
+}
+
+.menu-item:focus
+{
+	outline: 0;
+}
+
+.menu-item
+{
+	appearance: none;
+	text-decoration: none;
+	display: block;
+
+	border: 0;
+	border: 2px solid transparent;
+	border-radius: 5px;
+	padding: 0.25rem 1rem;
+	line-height: 1.25rem;
+
+	font-size: 1rem;
+	color: var(--text-color);
+	background-color: var(--button-color);
+	font-family: inherit;
+
+	user-select: none;
+	cursor: pointer;
+}
+
+.menu-item:hover
+{
+	color: white;
+	background-color: var(--highlight-color);
+}
+
+.menu-item:active
+{
+	color: white;
+	background-color: #4d4ddb; 
+}
+
+.menu-item[disabled],
+.menu-item:disabled
+{
+	background-color: var(--disabled-color);
+	color: var(--dark-gray);
+	cursor: default;
+}
+
+.menu form
+{
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.menu select
+{
+	cursor: pointer;
+}
+
+.menu input,
+.menu select
+{
+	appearance: none;
+	border: 2px solid transparent;
+	box-sizing: content-box;
+	border-radius: 5px;
+	padding: 0 0.5rem;
+	height: 1.75rem;
+	line-height: 1rem;
+	
+	font-size: 1rem;
+	color: black;
+	background-color: white;
+	opacity: 1;
+	font-family: inherit;
+}
+
+.menu select:focus,
+.menu input:focus
+{
+	outline: 0;
+	border: 2px solid var(--highlight-color);
+}
+
+.menu select:disabled,
+.menu input:disabled
+{
+	opacity: 0.7;
+	cursor: default;
+}
+
+#new-map-actions label[for="new-height"]
+{
+	font-weight: 300;
+	margin: 0 -0.125rem;
+	padding-bottom: 0.125rem;
+	font-size: 1.25rem;
+}
+
+#new-map-actions button[type="submit"]
+{	
+	margin-right: 0.5rem;
+}
+
+#new-map-actions input[type="number"]
+{
+	width: 3.75rem;
+}
+
+#scale-actions
+{
+	flex-shrink: 3;
+	align-self: flex-end;
+	justify-content: center;
+	column-gap: 0.5rem;
+	row-gap: 0.5rem;
+}
+
+#scale-actions select
+{
+	width: 3rem;
+}
+
+/* =================================
+ * Основное содержимое страницы
+ * =================================
+ */
+
+main
+{
+	flex-grow: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: auto;
+}
+
+div.container
+{
+	position: relative;
+	background-color: var(--dark-gray);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+	/* border: 5px dotted white; */
+}
+
+#drawing-canvas
+{
+	display: block;
+	/* border: 2px dashed cyan; */
+}
