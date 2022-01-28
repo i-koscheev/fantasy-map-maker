@@ -11,54 +11,85 @@
 	<header>
 		<h1>Fantasy Map Maker</h1>
 		
-		<div class="wrapping-panel">
-			
-			<div class="menu" id="new-map-actions">
-				<button type="button" class="menu-item" disabled>Открыть файл</button>
+		<ul class="row horizontal-menu none-list">
+			<li>
+				<button type="button" class="button" >
+					<svg role="presentation" width="30" height="20" class="button__icon">
+						<use href="images/sprite.svg#new">
+					</svg>
+					<span class="button__text">Новая карта</span>
+				</button>
+			</li>	
+			<li>
+				<button type="button" class="button">
+					<svg role="presentation" width="20" height="20" class="button__icon">
+						<use href="images/sprite.svg#open">
+					</svg>
+					<span class="button__text">Открыть</span>
+				</button>
+			</li>
+			<li>
+				<a class="button" role="button" download="map.txt" disabled>
+					<svg role="presentation" width="20" height="20" class="button__icon">
+						<use href="images/sprite.svg#save">
+					</svg>
+					<span class="button__text">Сохранить</span>
+				</a>
+			</li>
+			<li>
+				<a class="button" role="button" download="map.svg" disabled>
+					<svg role="presentation" width="20" height="20" class="button__icon">
+						<use href="images/sprite.svg#export">
+					</svg>
+					<span class="button__text">Экспорт SVG</span>
+				</a>
+			</li>	
+			<li>
+				<button type="button" class="button button_close" disabled>
+					<svg role="presentation" width="20" height="20" class="button__icon">
+						<use href="images/sprite.svg#close">
+					</svg>
+					<span class="button__text">Закрыть</span>
+				</button>
+			</li>
+		</ul>
 		
-				<span>или</span>
-		
-				<form name="new-size">
-					<button type="submit" class="menu-item">Новая карта</button>
-					<input type="number" min="80" max="1920" step="1" value="640"
-						title="Ширина холста"
-						name="width" id="new-width"
-					/>
-					<label for="new-height">×</label>
-					<input type="number" min="80" max="1920" step="1" value="640"
-						title="Высота холста"
-						name="height" id="new-height"
-					/>	
-				</form>	
-			</div>
-			
-			<div class="menu" id="open-map-actions" hidden>
-				
-				<button type="button" class="menu-item" disabled>Сохранить файл</button>
-				<a class="menu-item" role="button" download="map.svg">Экспорт SVG</a>	
-				<button type="button" class="menu-item" data-action="close-map" >Закрыть</button>
-			</div>	
-		</div>
-		
-		<div class="menu" id="scale-actions" hidden>
+		<div class="row zoombar">
 			<label for="scale">Масштаб</label>
-			<select id="scale" disabled>
+			<select id="scale" class="select field" disabled>
 				<option value="0.5">50%</option>
 				<option value="1" selected>100%</option>
 				<option value="2">200%</option>
 				<option value="5">500%</option>
 			</select>
 		</div>
-
 	</header>
-	
-	<aside class="toolbar">
-		
-	</aside>
 
 	<main>
+		<aside class="modal">
+			<div class="column sizebar">
+				<span>Задайте размеры холста</span>
+				<form id="new-size" name="new-size">
+					<input type="number" class="input-number field"
+						min="80" max="1920" step="1" value="640"
+						title="Ширина холста" name="width"
+					/>
+					<label>×
+						<input type="number" class="input-number field"
+							min="80" max="1920" step="1" value="640"
+							title="Высота холста" name="height"
+						/>
+					</label>
+				</form>
+				<div class="row">
+					<button type="submit" form="new-size" class="button">Создать</button>
+					<button type="button" class="button button_close">Отмена</button>
+				</div>
+			</div>
+		</aside>
+
 		<div class="container">
-			<canvas id="drawing-canvas" width="640" height="640"></canvas>
+			<canvas id="drawing-canvas" width="20" height="20"></canvas>
 		</div>
 	</main>
 

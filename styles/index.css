@@ -1,14 +1,15 @@
-html {
+html
+{
 	--light-gray: #D6D6D6;
 	--dark-gray: #999999;
-	--border-color: #646464;
+	--darker-gray: #646464;
 	--text-color: #141414;
 	--accent-color: #6666aa;
 	--button-color: #EFEFEF;
 	--disabled-color: #CFCFCF;
 	--highlight-color: #5b5bff;
-
-	font-size: 16px;
+	--highlight-outline: rgba(91, 91, 255, 0.8);
+	/* font-size: 16px; */
 }
 
 body
@@ -20,12 +21,16 @@ body
 	width: 100vw;
 	height: 100vh;
 	line-height: 1;
-
 	font-family: Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
+	color: var(--text-color);
 	background-color: var(--dark-gray);
 }
 
-header {
+
+/* шапка */
+
+header
+{
 	flex-shrink: 0;
 	
 	display: flex;
@@ -34,117 +39,170 @@ header {
 	overflow: hidden;
 	column-gap: 1rem;
 	padding: 1rem;
-	
+	border-bottom: 1px solid var(--darker-gray);	
 	font-size: 1rem;
-	text-align: center;
-	color: var(--text-color);
-	background: var(--light-gray);	
+	background: var(--light-gray);
+
 	user-select: none;
 }
 
-header > h1
+h1
 {
-	flex-shrink: 2;
 	margin: 0 0.5rem;
-	padding: 0 1rem 0 0;
 	line-height: 2rem;
 	
 	font-size: 1.25rem;
 	font-weight: normal;
+	text-align: center;
+
+	padding-right: 1rem;
 	border-right: 1px solid var(--accent-color);
 	color: var(--accent-color); 
 }
 
-.wrapping-panel {
-	flex-grow: 1;
 
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
+/* меню и панели инструментов */
+
+.horizontal-menu
+{
+	flex-grow: 1;
 	column-gap: 1rem;
-	row-gap: 1rem;
 }
 
-/* =================================
- * Меню и элементы меню
- * =================================
- */
-
-.menu
+.zoombar
 {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	column-gap: 1rem;
+	flex-shrink: 1;
+	justify-content: center;
+	column-gap: 0.5rem;
+}
+
+.sizebar 
+{
 	row-gap: 0.75rem;
 }
 
-.menu[hidden]
+	.sizebar label
+	{
+		font-size: 1.25rem;
+		color: var(--darker-gray);
+	}
+
+	.sizebar .row
+	{
+		column-gap: 0.75rem;
+	}
+
+
+/* общие классы */
+
+.row
+{
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+}
+
+.column
+{
+	display: flex;
+	flex-direction: column;
+	flex-wrap: nowrap;
+}
+
+.modal
 {
 	display: none;
+	position: absolute;
+	padding: 1.5rem;
+	border-radius: 5px;
+	border: 1px solid var(--darker-gray);
+	background: var(--light-gray);
 }
 
-.menu-item:focus
+.none-list
 {
-	outline: 0;
+	list-style: none;
+	margin: 0;
+	padding-left: 0; 
 }
 
-.menu-item
+
+/* кнопки */
+
+.button
 {
 	appearance: none;
 	text-decoration: none;
-	display: block;
+	
+	display: flex;
+	align-items: center;
+	column-gap: 0.625rem;;
 
-	border: 0;
 	border: 2px solid transparent;
 	border-radius: 5px;
-	padding: 0.25rem 1rem;
-	line-height: 1.25rem;
+	padding: 0.375rem 0.75rem;
+	line-height: 1rem;
 
 	font-size: 1rem;
 	color: var(--text-color);
 	background-color: var(--button-color);
 	font-family: inherit;
+	text-align: left;
 
 	user-select: none;
 	cursor: pointer;
 }
 
-.menu-item:hover
+.button:hover
 {
 	color: white;
 	background-color: var(--highlight-color);
 }
 
-.menu-item:active
+.button:active
 {
 	color: white;
-	background-color: #4d4ddb; 
+	background-color: #4d4ddb;
+	border-color: transparent;
 }
 
-.menu-item[disabled],
-.menu-item:disabled
+.button:focus
 {
-	background-color: var(--disabled-color);
+	outline: 0;
+	border: 2px solid var(--highlight-outline);
+}
+
+.button[disabled],
+.button:disabled
+{
 	color: var(--dark-gray);
+	background-color: var(--disabled-color);
 	cursor: default;
 }
 
-.menu form
+.button_close:hover:not([disabled]),
+.button_close:active:not([disabled])
 {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 0.5rem;
+	background-color: #962c2c;
 }
 
-.menu select
+.button_close:focus
 {
-	cursor: pointer;
+	outline: 0;
+	border: 2px solid rgba(150, 44, 44, 0.8);
 }
 
-.menu input,
-.menu select
+.button__icon
+{
+	width: 1rem;
+	height: 1rem;
+	fill: currentColor;
+}
+
+
+/* различные поля ввода */
+
+.field
 {
 	appearance: none;
 	border: 2px solid transparent;
@@ -161,56 +219,36 @@ header > h1
 	font-family: inherit;
 }
 
-.menu select:focus,
-.menu input:focus
+.field:focus
 {
 	outline: 0;
+	border: 2px solid var(--highlight-outline);
+}
+
+.field:active:not([disabled])
+{
 	border: 2px solid var(--highlight-color);
 }
 
-.menu select:disabled,
-.menu input:disabled
+.field:disabled
 {
 	opacity: 0.7;
 	cursor: default;
 }
 
-#new-map-actions label[for="new-height"]
+.select
 {
-	font-weight: 300;
-	margin: 0 -0.125rem;
-	padding-bottom: 0.125rem;
-	font-size: 1.25rem;
-}
-
-#new-map-actions button[type="submit"]
-{	
-	margin-right: 0.5rem;
-}
-
-#new-map-actions input[type="number"]
-{
-	width: 3.75rem;
-}
-
-#scale-actions
-{
-	flex-shrink: 3;
-	align-self: flex-end;
-	justify-content: center;
-	column-gap: 0.5rem;
-	row-gap: 0.5rem;
-}
-
-#scale-actions select
-{
+	cursor: pointer;
 	width: 3rem;
 }
 
-/* =================================
- * Основное содержимое страницы
- * =================================
- */
+.input-number
+{
+	width: 4rem;
+}
+
+
+/* основное содержимое */
 
 main
 {
@@ -221,12 +259,10 @@ main
 	overflow: auto;
 }
 
-div.container
+.container
 {
-	position: relative;
 	background-color: var(--dark-gray);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-	/* border: 5px dotted white; */
 }
 
 #drawing-canvas
@@ -234,3 +270,50 @@ div.container
 	display: block;
 	/* border: 2px dashed cyan; */
 }
+
+
+/* отображение при маленькой ширине экрана */
+
+@media screen and (max-width: 1160px)
+{
+	.zoombar
+	{
+		align-self: flex-start;
+	}
+
+	.zoombar label
+	{
+		display: none;
+	}
+}
+
+@media screen and (max-width: 1080px)
+{
+	h1
+	{
+		font-size: 1.125rem;
+	}
+	
+	.horizontal-menu .button__text
+	{
+		display: none;
+	}
+}
+
+@media screen and (min-width: 720px) and (max-width: 1080px)
+{
+	.horizontal-menu .button:hover:not([disabled]) .button__text
+	{
+		display: block;
+	}
+}
+
+@media screen and (max-width: 610px)
+{
+	h1
+	{
+		font-size: 0;
+		padding: 0;
+		margin: 0;
+	}
+} 

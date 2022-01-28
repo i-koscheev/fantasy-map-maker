@@ -15,16 +15,18 @@ function main()
 		return;
 	}
 	
+	
 	const sizes = new SizeSetter( sizeForm, canvas );
+	
 
-	const menus = document.querySelectorAll( "header .menu" );
+	const modal = document.querySelector( "main aside.modal" );
 
 	function newMap()
 	{
-		for ( const menu of menus)
-		{
-			menu.hidden = !menu.hidden;
-		}
+		// for ( const menu of menus)
+		// {
+		// 	menu.hidden = !menu.hidden;
+		// }
 		const workplace = new DrawingWorkplace(
 			canvas,
 			sizes.width,
