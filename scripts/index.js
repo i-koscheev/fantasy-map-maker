@@ -5,11 +5,11 @@ function main()
 {
 	const canvas = document.getElementById( "drawing-canvas" );
 	const sizeForm = document.forms.namedItem( "new-size" );
-	const scaleSelector = document.getElementById( "scale" );
+	const zoom = document.getElementById( "zoom" );
 	
 	if ( !canvas || !( canvas instanceof HTMLCanvasElement )
 		|| !sizeForm
-		|| !scaleSelector
+		|| !zoom
 	)
 	{
 		return;
@@ -31,7 +31,7 @@ function main()
 			canvas,
 			sizes.width,
 			sizes.height,
-			scaleSelector
+			zoom
 		);
 	}
 
