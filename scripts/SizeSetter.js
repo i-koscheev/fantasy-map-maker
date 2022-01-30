@@ -52,8 +52,10 @@ export class SizeSetter
 	 #resizeHeightBound;
 
 	/**
+	 * Форма, устанавливающая размеры элемента
+	 * 
 	 * @param {HTMLFormElement} form
-	 * @param {HTMLElement} [element]
+	 * @param {HTMLElement} element
 	 */
 	constructor( form, element )
 	{
@@ -79,8 +81,6 @@ export class SizeSetter
 
 		this.#resizeWidthBound = this.#resizeWidth.bind( this );
 		this.#resizeHeightBound = this.#resizeHeight.bind( this );
-		
-		this.init();
 	}
 
 	/** Инициализация */
@@ -90,6 +90,21 @@ export class SizeSetter
 		this.#initWidth();
 		this.#initHeight();
 		this.#initForm();
+	}
+
+	/** Прекращение работы */
+	shutdown()
+	{
+		this.#inputWidth.removeEventListener(
+			"input",
+			this.#resizeWidthBound
+		);
+		this.#inputHeight.removeEventListener(
+			"input",
+			this.#resizeHeightBound
+		);
+		this.#inputWidth.disabled = true;
+		this.#inputHeight.disabled = true;
 	}
 
 	/**
@@ -111,7 +126,7 @@ export class SizeSetter
 	}
 
 	/**
-	 * Возвращает поле ввода на форме
+	 * Возвращает поле ввода формы по его имени
 	 * @param {string} name
 	 */
 	#getFormInput( name )
@@ -147,7 +162,7 @@ export class SizeSetter
 		);
 	}
 
-	/** Обработывает изменение высоты */
+	/** Обрабатывает изменение высоты */
 	#resizeHeight()
 	{
 		this.#height = getInt( this.#inputHeight );
@@ -174,17 +189,8 @@ export class SizeSetter
 		this.#form.addEventListener(
 			'submit',
 			( ) => {
-				//отменяем возможность изменения, чтобы зафиксировать значения
-				this.#inputWidth.removeEventListener(
-					"input",
-					this.#resizeWidthBound
-				);
-				this.#inputHeight.removeEventListener(
-					"input",
-					this.#resizeHeightBound
-				);
-				this.#inputWidth.disabled = true;
-				this.#inputHeight.disabled = true;
+				//отменяем возможность дальнейшего изменения, чтобы зафиксировать значения
+				this.shutdown();
 				this.onSubmit();
 			},
 			{ once: true }

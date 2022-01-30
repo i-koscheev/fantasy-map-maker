@@ -52,15 +52,12 @@ export class DrawingWorkplace
 	#height;
 	
 	/**
-	 * Холст для рисования с заданными шириной и высотой
-	 * и элементом управления для изменения масштаба
+	 * Масштабируемый холст для рисования
 	 * 
-	 * @param {HTMLCanvasElement} canvas
-	 * @param {number} width
-	 * @param {number} height
-	 * @param {HTMLSelectElement} selector
+	 * @param {HTMLCanvasElement} canvas Холст
+	 * @param {HTMLSelectElement} selector Элемент для изменения масштаба
 	 */
-	constructor( canvas, width, height, selector )
+	constructor( canvas, selector )
 	{
 		//холст и контекст рисования
 		this.#canvas = canvas;
@@ -76,31 +73,46 @@ export class DrawingWorkplace
 		this.#selector = selector;
 		this.#scale = Number( selector.value );
 
+		this.rescale = this.rescale.bind( this );
+		this.minusScale = this.minusScale.bind( this );
+		this.plusScale = this.plusScale.bind( this );
+
+		//кнопки для изменения масштаба
+		this.#minusButton = this.#selector.previousElementSibling;
+		if ( !!this.#minusButton )
+		{
+			this.#minusButton.addEventListener( "click", this.minusScale );
+		}
+		this.#plusButton = this.#selector.nextElementSibling;
+		if ( !!this.#plusButton )
+		{
+			this.#plusButton.addEventListener( "click", this.plusScale );
+		}
+	}
+
+	/** Инициализация
+	 * 
+	 * @param {number} width Ширина
+	 * @param {number} height Высота
+	 */
+	init( width, height )
+	{
 		//устанавливаем изначальные размеры
 		this.#width = width;
 		this.#height = height;
 		this.#canvas.width = width * this.#scale;
 		this.#canvas.height = height * this.#scale;
-		
+
 		//настраиваем работу селектора масштаба
-		this.rescale = this.rescale.bind( this );
 		this.#selector.addEventListener( "input", this.rescale );
 		this.#selector.disabled = false;
-		
-		//кнопки для изменения масштаба
-		this.#minusButton = this.#selector.previousElementSibling;
-		this.#plusButton = this.#selector.nextElementSibling;
-		if ( this.#minusButton instanceof HTMLButtonElement )
-		{
+		if ( !!this.#minusButton )
+		{	
 			this.#minusButton.disabled = false;
-			this.minusScale = this.minusScale.bind( this );
-			this.#minusButton.addEventListener( "click", this.minusScale );
 		}
-		if ( this.#plusButton instanceof HTMLButtonElement )
-		{
-			this.#plusButton.disabled = false;
-			this.plusScale = this.plusScale.bind( this );
-			this.#plusButton.addEventListener( "click", this.plusScale );
+		if ( !!this.#plusButton )
+		{	
+			this.#plusButton.disabled = false;	
 		}
 	}
 
@@ -109,15 +121,13 @@ export class DrawingWorkplace
 	{
 		this.#selector.disabled = true;
 		this.#selector.removeEventListener( "input", this.rescale );
-		if ( this.#minusButton instanceof HTMLButtonElement )
+		if ( !!this.#minusButton )
 		{
 			this.#minusButton.disabled = true;
-			this.#minusButton.removeEventListener( "click", this.minusScale );
 		}
-		if ( this.#plusButton instanceof HTMLButtonElement )
+		if ( !!this.#plusButton )
 		{
 			this.#plusButton.disabled = true;
-			this.#plusButton.removeEventListener( "click", this.plusScale );
 		}
 	}
 

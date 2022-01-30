@@ -13,7 +13,7 @@
 		
 		<ul class="row horizontal-menu none-list">
 			<li>
-				<button type="button" class="button" >
+				<button type="button" class="button" data-command="new">
 					<svg role="presentation" width="30" height="20" class="button__icon">
 						<use href="images/sprite.svg#new">
 					</svg>
@@ -21,7 +21,7 @@
 				</button>
 			</li>	
 			<li>
-				<button type="button" class="button">
+				<button type="button" class="button" disabled>
 					<svg role="presentation" width="20" height="20" class="button__icon">
 						<use href="images/sprite.svg#open">
 					</svg>
@@ -45,7 +45,7 @@
 				</a>
 			</li>	
 			<li>
-				<button type="button" class="button button_close" disabled>
+				<button type="button" class="button button_close" data-command="close">
 					<svg role="presentation" width="20" height="20" class="button__icon">
 						<use href="images/sprite.svg#close">
 					</svg>
@@ -53,202 +53,127 @@
 				</button>
 			</li>
 		</ul>
-		
 	</header>
 
-	<main>
-		<aside class="column sidebar">
-			<ul class="column toolbar none-list">
-				<li>
-					<input type="radio" name="tool" id="cursor" value="cursor" class="none-radio" checked>
-					<label class="tool" for="cursor">
-						<svg role="presentation" width="20" height="20" class="tool__icon">
-							<use href="images/sprite.svg#cursor">
-						</svg>
-						Курсор
-					</label>
-				</li>
+	
+	<aside class="column sidebar">
+		<ul class="column toolbar none-list">
+			<li>
+				<input type="radio" name="tool" id="cursor" value="cursor" class="none-radio" checked>
+				<label class="tool" for="cursor">
+					<svg role="presentation" width="20" height="20" class="tool__icon">
+						<use href="images/sprite.svg#cursor">
+					</svg>
+					Курсор
+				</label>
+			</li>
 
-				<li>
-					<input type="radio" name="tool" id="brush" value="brush" class="none-radio">
-					<label class="tool" for="brush">
-						<svg role="presentation" width="20" height="20" class="tool__icon">
-							<use href="images/sprite.svg#brush">
-						</svg>
-						Кисть
-					</label>
+			<li>
+				<input type="radio" name="tool" id="brush" value="brush" class="none-radio">
+				<label class="tool" for="brush">
+					<svg role="presentation" width="20" height="20" class="tool__icon">
+						<use href="images/sprite.svg#brush">
+					</svg>
+					Кисть
+				</label>
 
-					<div class="column settings">
-						<div class="row">
-							<label for="brush-thickness">Толщина</label>
-							<input type="number" class="field" id="brush-thickness"
-								min="1" max="100" step="0.1" value="5"
-							/>
-						</div>
-
-						<p>Тип территории: <span class="title">земля</span></p>
-						
-						<ul class="palette none-list">
-							<!-- <li>
-								<input type="radio" name="color" id="water" value="water" class="none-radio" checked>
-								<label class="color" for="water">
-									<svg role="presentation" width="20" height="20" class="color__icon">
-										
-										<rect fill="#2222aa" x="0" height="200" y="0" width="200" />
-									</svg>
-								</label>
-							</li>
-
-							<li>
-								<input type="radio" name="color" id="b1" value="b1" class="none-radio">
-
-								<label class="color" for="b1">
-									<svg role="presentation" width="20" height="20" class="color__icon">
-										
-										<rect fill="#55aa22" x="0" height="200" y="0" width="200" />
-									</svg>
-								</label>
-							</li>
-
-							<li>
-								<input type="radio" name="color" id="b2" value="b2" class="none-radio" checked>
-
-								<label class="color" for="b2">
-									<svg role="presentation" width="20" height="20" class="color__icon">
-										
-										<rect fill="#228888" x="0" height="200" y="0" width="200" />
-									</svg>
-								</label>
-							</li>
-
-							<li>
-								<input type="radio" name="color" id="b3" value="b3" class="none-radio" checked>
-
-								<label class="color" for="b3">
-									<svg role="presentation" width="20" height="20" class="color__icon">
-										
-										<rect fill="#bb0022" x="0" height="200" y="0" width="200" />
-									</svg>
-								</label>
-							</li>
-
-							<li>
-								<input type="radio" name="color" id="b4" value="b4" class="none-radio" >
-
-								<label class="color" for="b4">
-									<svg role="presentation" width="20" height="20" class="color__icon">
-										
-										<rect fill="#FFFFFF" x="0" height="200" y="0" width="200" />
-									</svg>
-								</label>
-							</li> -->
-						</ul>
-
-					</div>
-				</li>
-
-				<li>
-					<input type="radio" name="tool" id="eraser" value="eraser" class="none-radio">
-					<label class="tool" for="eraser">
-						<svg role="presentation" width="20" height="20" class="tool__icon">
-							<use href="images/sprite.svg#eraser">
-						</svg>
-						Ластик
-					</label>
-
-					<div class="settings row">
-						<label for="eraser-thickness">Толщина</label>
-						<input type="number" class="field" id="eraser-thickness"
-								min="1" max="100" step="0.1" value="10"
+				<div class="column settings">
+					<div class="row">
+						<label for="brush-size">Размер</label>
+						<input type="number" class="field" id="brush-size"
+							min="1" max="500" step="0.1" value="50"
 						/>
 					</div>
-				</li>
 
-				<li>
-					<input type="radio" name="tool" id="style" value="style" class="none-radio" checked>
-					<label class="tool" for="style">
-						<svg role="presentation" width="20" height="20" class="tool__icon">
-							<use href="images/sprite.svg#palette">
-						</svg>
-						Стиль
-					</label>
+					<p>Тип территории: <span class="title">земля</span></p>
 					
-					<div class="settings column">
-						<p>Набор: <span class="title">стандартный</span></p>
+					<ul class="palette none-list">
+					</ul>
 
-						<ul class="palette none-list">
-							<!-- <li>
-								<input type="radio" name="style" id="std" value="std" class="none-radio" checked>
-								<label class="style color" for="std">
-									<svg role="presentation" width="20" height="20" class="color__icon">
-										
-										<rect fill="#2222aa" x="0" height="200" y="0" width="200" />
-									</svg>
-									
-								</label>
-							</li>
-							<li>
-								<input type="radio" name="style" id="z" value="z" class="none-radio" >
-								<label class="style color" for="z">
-									<svg role="presentation" width="20" height="20" class="color__icon">
-										<rect fill="#ffffaa" x="0" height="200" y="0" width="200" />
-									</svg>
+				</div>
+			</li>
 
-								</label>
-							</li> -->
-						</ul>
-					</div>
-				</li>
-			</ul>
-
-
-			<div class="row zoombar">
-				<label for="zoom">Масштаб</label>
-				<button type="button" class="button" disabled>
-					<svg role="presentation" width="20" height="20" class="button__icon">
-						<use href="images/sprite.svg#minus">
+			<li>
+				<input type="radio" name="tool" id="eraser" value="eraser" class="none-radio">
+				<label class="tool" for="eraser">
+					<svg role="presentation" width="20" height="20" class="tool__icon">
+						<use href="images/sprite.svg#eraser">
 					</svg>
-				</button>
-				<select id="zoom" class="field" disabled>
-					<option value="0.5">50%</option>
-					<option value="1" selected>100%</option>
-					<option value="2">200%</option>
-					<option value="5">500%</option>
-				</select>
-				<button type="button" class="button" disabled>
-					<svg role="presentation" width="20" height="20" class="button__icon">
-						<use href="images/sprite.svg#plus">
+					Ластик
+				</label>
+
+				<div class="settings row">
+					<label for="eraser-size">Размер</label>
+					<input type="number" class="field" id="eraser-size"
+							min="1" max="500" step="0.1" value="50"
+					/>
+				</div>
+			</li>
+
+			<li>
+				<input type="radio" name="tool" id="style" value="style" class="none-radio">
+				<label class="tool" for="style">
+					<svg role="presentation" width="20" height="20" class="tool__icon">
+						<use href="images/sprite.svg#palette">
 					</svg>
-				</button>
+					Стиль
+				</label>
+				
+				<div class="settings column">
+					<p>Набор: <span class="title">стандартный</span></p>
+
+					<ul class="palette none-list">
+					</ul>
+				</div>
+			</li>
+		</ul>
+
+
+		<div class="row zoombar">
+			<label for="zoom">Масштаб</label>
+			<button type="button" class="button" disabled>
+				<svg role="presentation" width="20" height="20" class="button__icon">
+					<use href="images/sprite.svg#minus">
+				</svg>
+			</button>
+			<select id="zoom" class="field" disabled>
+				<option value="0.5">50%</option>
+				<option value="1" selected>100%</option>
+				<option value="2">200%</option>
+				<option value="5">500%</option>
+			</select>
+			<button type="button" class="button" disabled>
+				<svg role="presentation" width="20" height="20" class="button__icon">
+					<use href="images/sprite.svg#plus">
+				</svg>
+			</button>
+		</div>
+	</aside>
+
+	<main>
+		<aside class="modal">
+			<div class="column size-dialog">
+				<h2>Новая карта</h2>
+				<p>Задайте размеры холста</p>
+				<form id="new-size" name="new-size">
+					<input type="number" class="field" name="width"
+						min="80" max="1920" step="1" value="640"
+					/>
+					<label>×
+						<input type="number" class="field" name="height"
+							min="80" max="1920" step="1" value="640"
+						/>
+					</label>
+				</form>
+				<div class="row">
+					<button type="submit" form="new-size" class="button">Создать</button>
+					<button type="button" class="button button_close">Отмена</button>
+				</div>
 			</div>
 		</aside>
 
-		<div class="working-area">
-
-			<aside class="modal">
-				<div class="column sizebar">
-					<h2>Новая карта</h2>
-					<p>Задайте размеры холста</p>
-					<form id="new-size" name="new-size">
-						<input type="number" class="field" name="width"
-							min="80" max="1920" step="1" value="640"
-						/>
-						<label>×
-							<input type="number" class="field" name="height"
-								min="80" max="1920" step="1" value="640"
-							/>
-						</label>
-					</form>
-					<div class="row">
-						<button type="submit" form="new-size" class="button">Создать</button>
-						<button type="button" class="button button_close">Отмена</button>
-					</div>
-				</div>
-			</aside>
-
-			<div class="container">
-				<canvas id="drawing-canvas" width="20" height="20"></canvas>
-			</div>
+		<div class="container">
+			<canvas id="drawing-canvas" width="0" height="0"></canvas>
 		</div>
 	</main>
 

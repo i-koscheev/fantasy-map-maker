@@ -1,45 +1,31 @@
-import { DrawingWorkplace } from "./DrawingWorkplace.js";
-import { SizeSetter } from "./SizeSetter.js"
+import { MainMenu } from "./MainMenu.js";
+import { Editor } from "./Editor.js";
+import { MapMaker } from "./MapMaker.js";
 
 function main()
 {
 	const canvas = document.getElementById( "drawing-canvas" );
 	const sizeForm = document.forms.namedItem( "new-size" );
+	const tools = document.querySelector( ".toolbar" );
+	const menu = document.querySelector( "header .horizontal-menu" );
 	const zoom = document.getElementById( "zoom" );
 	
-	if ( !canvas || !( canvas instanceof HTMLCanvasElement )
+	if ( 
+		!canvas || !( canvas instanceof HTMLCanvasElement )
 		|| !sizeForm
+		|| !tools
 		|| !zoom
+		|| !menu
 	)
 	{
 		return;
 	}
 	
-	
-	const sizes = new SizeSetter( sizeForm, canvas );
-	
+	const editor = new Editor( canvas, tools, zoom );
 
-	const modal = document.querySelector( "main aside.modal" );
-
-	function newMap()
-	{
-		// for ( const menu of menus)
-		// {
-		// 	menu.hidden = !menu.hidden;
-		// }
-		const workplace = new DrawingWorkplace(
-			canvas,
-			sizes.width,
-			sizes.height,
-			zoom
-		);
-	}
-
-	sizes.onSubmit = newMap;
+	const app = new MapMaker( canvas, sizeForm, editor );
 	
-	// size.init();
+	new MainMenu( app, menu );
 }
-
-
 
 main();

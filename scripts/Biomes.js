@@ -1,5 +1,8 @@
 import { Color } from "./Color.js";
 
+/** Количество непустых биомов */
+export const BIOMES_COUNT = 8;
+
 /**
  * Биомы – типы территорий на карте
  * @enum {number}
@@ -17,13 +20,13 @@ export const Biomes = {
 	/** Горы */
 	MOUNTAINS: 3,
 
-	/** Леса */
+	/** Лес */
 	FOREST: 4,
 
-	/** Болота */
+	/** Болото */
 	SWAMP: 5,
 
-	/** Пустыни */
+	/** Пустыня */
 	DESERT: 6,
 
 	/** Снега */
@@ -31,13 +34,90 @@ export const Biomes = {
 
 	/** Холмы */
 	HILLS: 8,
-
-	/** Лава */
-	LAVA: 9,
-
-	/** Мёртвые земли */
-	DEAD: 10,
 };
+
+/**
+ * Строковое обозначение территории по её коду
+ * @param {number} code Код территории
+ * @returns {string}
+ */
+export function biomeName( code )
+{
+	switch ( code )
+	{
+		case Biomes.NONE:
+			return "none";
+		
+		case Biomes.WATER:
+			return "water";
+		
+		case Biomes.LAND:
+			return "land";
+		
+		case Biomes.MOUNTAINS:
+			return "mountains";
+		
+		case Biomes.FOREST:
+			return "forest";
+		
+		case Biomes.SWAMP:
+			return "swamp";
+		
+		case Biomes.DESERT:
+			return "desert";
+		
+		case Biomes.SNOW:
+			return "snow";
+		
+		case Biomes.HILLS:
+			return "hills";
+		
+		default:
+			return "";
+	}
+}
+
+/**
+ * Русское название территории по её коду
+ * @param {number} code Код территории
+ * @returns {string}
+ */
+export function rusName( code )
+{
+	switch ( code )
+	{
+		case Biomes.NONE:
+			return "пусто";
+		
+		case Biomes.WATER:
+			return "вода";
+		
+		case Biomes.LAND:
+			return "земля";
+		
+		case Biomes.MOUNTAINS:
+			return "горы";
+		
+		case Biomes.FOREST:
+			return "лес";
+		
+		case Biomes.SWAMP:
+			return "болото";
+		
+		case Biomes.DESERT:
+			return "пустыня";
+		
+		case Biomes.SNOW:
+			return "снега";
+		
+		case Biomes.HILLS:
+			return "холмы";
+		
+		default:
+			return "";
+	}
+}
+
 
 /**
  * Задаёт отображение для конкретного типа территории
@@ -69,73 +149,12 @@ export class BiomeView
 	borderСolor = null;
 
 	/**
-	 * Узор на карте, если такой имеется
-	 * @type {string | null}
+	 * Имеется ли узор на карте
+	 * @type {boolean}
 	 * */
-	pattern = null;
+	hasPattern = false;
 }
 
-/**
- * Стандартная цветовая схема
- * @type {BiomeView[]}
- * */
-const DEFAULT_PALETTE = [
-	{
-		biome: Biomes.NONE,
-		color = new Color( 235, 235, 235 ),
-		pattern = null,
-	},
-	{
-		biome: Biomes.WATER,
-		color = new Color( 142, 194, 255 ),
-		pattern = null,
-	},
-	{
-		biome: Biomes.LAND,
-		color = new Color( 191, 246, 147 ),
-		pattern = null,
-	},
-	{
-		biome: Biomes.MOUNTAINS,
-		color = new Color( 206, 178, 125 ),
-		pattern = "../images/sets/default/mountains.svg",
-	},
-	{
-		biome: Biomes.FOREST,
-		color = new Color( 137, 238, 120 ),
-		pattern = "../images/sets/default/forest.svg",
-	},
-	{
-		biome: Biomes.SWAMP,
-		color = new Color( 140, 227, 186 ),
-		pattern = "../images/sets/default/swamp.svg",
-	},
-	{
-		biome: Biomes.DESERT,
-		color = new Color( 255, 239, 155 ),
-		pattern = null,
-	},
-	{
-		biome: Biomes.SNOW,
-		color = new Color( 255, 255, 255 ),
-		pattern = null,
-	},
-	{
-		biome: Biomes.HILLS,
-		color = new Color( 231, 227, 133 ),
-		pattern = "../images/sets/default/hills.svg",
-	},
-	{
-		biome: Biomes.LAVA,
-		color = new Color( 248, 112, 54 ),
-		pattern = null,
-	},
-	{
-		biome: Biomes.DEAD,
-		color = new Color( 149, 140, 138 ),
-		pattern = null,
-	},
-]
 
 /**
  * Палитра цветов и изображений для отображения территорий
@@ -147,28 +166,33 @@ export class Palette
 	 * @type {string}
 	 */
 	#name;
+
+	/**
+	 * Русское название
+	 * @type {string}
+	 */
+	#rusName;
 	
 	/**
 	 * Массив элементов палитры
 	 * @type {BiomeView[]}
 	 * */
-	#data = DEFAULT_PALETTE;
+	#data;
 
-	/**
+	/** 
 	 * @param {string} name
-	 * @param {BiomeView[]} [array]
+	 * @param {string} rus
+	 * @param {BiomeView[]} array
 	 */
-	constructor( name, array )
+	constructor( name, rus, array )
 	{
 		this.#name = name;
-		if ( array )
-		{
-			this.#data = array;
-		}
+		this.#rusName = rus;
+		this.#data = array;
 	}
 
 	/**
-	 * Возвращает название палитры
+	 * Название палитры
 	 */
 	get name()
 	{
@@ -176,11 +200,19 @@ export class Palette
 	}
 
 	/**
-	 * Возвращает массив элементов палитры
+	 * SVG-файл с узорами
+	 */
+	get rusName()
+	{
+		return this.#rusName;
+	}
+
+	/**
+	 * Массив элементов палитры
 	 */
 	get data()
 	{
 		return this.#data;
 	}
-	 
+	
 }
