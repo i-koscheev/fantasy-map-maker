@@ -1,6 +1,8 @@
-import { Biomes, BiomeView, Palette } from "./Biomes.js";
+import { Biomes, rusName, biomeName, BiomeView, Palette, BIOMES_COUNT } from "./Biomes.js";
 
 import { STYLES } from "./Styles.js";
+
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 /**
  * Инструменты
@@ -13,6 +15,8 @@ import { STYLES } from "./Styles.js";
 	STYLE: 3,
 };
 
+const MAX_PAINT_SIZE = 500;
+
 /**
  * Панель инструментов
  */
@@ -22,19 +26,19 @@ export class Toolkit
 	 * Выбранный инструмент
 	 * @type {number}
 	 */
-	#checked;
+	#checked = Tools.CURSOR;
+
+	/** 
+	 * Инструменты 
+	 * @type {NodeListOf<HTMLInputElement>}
+	 */
+	#tools;
 
 	/**
-	 * Кисть
-	 * @type {HTMLInputElement}
+	 * Настройки кисти
+	 * @type {HTMLElement}
 	 */
-	#brush;
-
-	/**
-	 * Размер кисти
-	 * @type {number}
-	 */
-	#brushSize;
+	#brushSettings;
 
 	/**
 	 * Элемент с названием кисти
@@ -43,34 +47,40 @@ export class Toolkit
 	#brushTitle;
 
 	/**
+	 * Размер кисти
+	 * @type {number}
+	 */
+	#brushSize = 30;
+	
+	/**
 	 * Выбранный тип территории
 	 * @type {number}
 	 */
-	#biome;
+	#biome = 1;
 
 	/**
-	 * Ластик
-	 * @type {HTMLInputElement}
+	 * Настройки ластика
+	 * @type {HTMLElement}
 	 */
-	#eraser;
+	#eraserSettings;
 
 	/**
 	 * Размер ластика
 	 * @type {number}
 	 */
-	#eraserSize;
+	#eraserSize = 60;
 
 	/**
-	 * Инструмент изменения стиля
-	 * @type {HTMLInputElement}
+	 * Настройки стиля
+	 * @type {HTMLElement}
 	 */
-	#style;
+	 #styleSettings;
 	
 	/**
-	 * "Индекс выбранного стиль"
+	 * "Индекс выбранного стиля"
 	 * @type {number}
 	 */
-	#paletteIndex;
+	#paletteIndex = 0;
 
 	/**
 	 * Элемент с названием стиля
@@ -78,14 +88,35 @@ export class Toolkit
 	 */
 	#styleTitle;
 
-
 	/**
 	 * Контроллер прерываний
 	 * @type {AbortController}
 	 */
 	#controller;
 
-	#tools;
+	/**
+	 * Действие при выборе кисти или ластика
+	 * @type {() => void}
+	 */
+	onStartPainting = () => {};
+
+	/**
+	 * Действие при прекращении рисования
+	 * @type {() => void}
+	 */
+	onStopPainting = () => {};
+
+	/**
+	 * Действие при смене размера кисти или ластика
+	 * @type {() => void}
+	 */
+	onPaintSizeChange = () => {};
+
+	/**
+	 * Действие при изменении стиля
+	 * @type {() => void}
+	 */
+	onStyleChange = () => {};
 
 	/**
 	 * Панель инструментов
@@ -93,15 +124,29 @@ export class Toolkit
 	 */
 	constructor( )
 	{
+		//инструменты
 		this.#tools = document.getElementsByName( "tool" );
-
-		// .getElementsByClassName("setting");
+		
+		// создаём настройки для каждого инструмента
+		this.#createSettings();
 	}
 	
-	/** Ининциализация */
-	init()
+	/** 
+	 * Ининциализация
+	 * @param {number} [styleIndex] Номер выбранного стиля из набора STYLES
+	 */
+	init( styleIndex = 0 )
 	{	
 		this.#controller = new AbortController();
+
+		if ( 0 <= styleIndex && styleIndex < STYLES.length )
+		{
+			this.#paletteIndex = styleIndex;
+		}
+		else
+		{
+			this.#paletteIndex = 0;
+		}
 
 		for ( let tool of this.#tools )
 		{
@@ -112,14 +157,69 @@ export class Toolkit
 					signal: this.#controller.signal,
 				},
 			);
+			if ( tool.checked )
+				this.#selectTool( tool.value );
 		}
 	}
 
 	/** Завершение работы */
 	shutdown()
 	{
+		this.#hideSettings();
 		this.#controller.abort();
 	}
+
+	/**
+	 * Выбранный биом
+	 * @returns {Biomes | null} 
+	 */
+	get color()
+	{
+		switch ( this.#checked )
+		{
+			case "brush":
+				return this.#biome;
+			
+			case "eraser":
+				return Biomes.NONE;
+
+			case "style":
+			case "cursor":
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * Размер инструмента рисования
+	 * @returns {number | null} 
+	 */
+	get paintSize()
+	{
+		switch ( this.#checked )
+		{
+			case "brush":
+				return this.#brushSize;
+			
+			case "eraser":
+				return this.#eraserSize;
+
+			case "style":
+			case "cursor":
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * Номер текущего стиля из набора STYLES
+	 * @returns {Biomes | null} 
+	 */
+	get styleIndex()
+	{
+		return this.#paletteIndex;
+	}
+
 
 	/**
 	 * Выбирает инструмент
@@ -127,31 +227,76 @@ export class Toolkit
 	 */
 	#selectTool( name )
 	{
+		this.#stopPainting();
 		switch ( name )
 		{
 			case "brush":
-				this.#checked = Tools.BRUSH;
+				this.#selectBrush();
 				break;
 			
 			case "eraser":
-				this.#checked = Tools.ERASER;
+				this.#selectEraser();
 				break;
 
 			case "style":
-				this.#checked = Tools.STYLE;
+				this.#selectStyle();
 				break;
 				
 			case "cursor":
-				this.#checked = Tools.CURSOR;
+				this.#selectCursor();
 				break;
 			
 			default:
 				throw new Error( `Unknown tool "${name}"` );
 		}
-
 	}
 	
+	#selectBrush( )
+	{
+		this.#brushSettings.style.display = "flex";
+		this.#eraserSettings.style.display = "none";
+		this.#styleSettings.style.display = "none";
+		this.#checked = Tools.BRUSH;
+		this.onStartPainting();
+	}
+
+	#selectEraser( )
+	{
+		this.#brushSettings.style.display = "none";
+		this.#eraserSettings.style.display = "flex";
+		this.#styleSettings.style.display = "none";
+		this.#checked = Tools.ERASER;
+		this.onStartPainting();
+	}
 	
+	#selectStyle( )
+	{
+		this.#brushSettings.style.display = "none";
+		this.#eraserSettings.style.display = "none";
+		this.#styleSettings.style.display = "flex";
+		this.#checked = Tools.STYLE;
+	}
+
+	#selectCursor( )
+	{
+		this.#hideSettings();
+		this.#checked = Tools.CURSOR;
+	}
+
+	#stopPainting()
+	{
+		if ( this.#checked === Tools.ERASER || this.#checked === Tools.BRUSH )
+			this.onStopPainting();
+	}
+
+	#hideSettings()
+	{
+		this.#brushSettings.style.display = "none";
+		this.#eraserSettings.style.display = "none";
+		this.#styleSettings.style.display = "none";
+	}
+
+
 	/**
 	 * Обработчик выбора инструмента
 	 * 
@@ -167,4 +312,375 @@ export class Toolkit
 		this.#selectTool( target.value );
 	}
 	
+	/**
+	 * Обработчик изменения параметра толщины
+	 * @param {Event} event
+	 */
+	#handleSizeInput( event )
+	{
+		const target = event.currentTarget;
+		switch ( target.id )
+		{
+			case "brush-size":
+				this.#brushSize = getNumber( target );
+				break;
+			
+			case "eraser-size":
+				this.#eraserSize = getNumber( target );;
+				break;
+		
+			default:
+				return;
+		}
+		this.onPaintSizeChange();
+	}
+
+	/**
+	 * Обработчик изменения стиля
+	 * 
+	 * @param {Event} event
+	 */
+	#handleStyleChange( event )
+	{
+		const target = event.currentTarget;
+		if ( target.name !== "style" )
+		{
+			return;
+		}
+
+		if ( !this.#controller.signal.aborted )
+		{
+			this.#paletteIndex = target.value;
+			this.#styleTitle.innerText = STYLES[ this.#paletteIndex ].rusName;
+			this.onStyleChange();
+			this.#changeBrushColorsView()
+		}
+		
+	}
+
+	/**
+	 * Обработчик изменения цвета кисти
+	 * 
+	 * @param {Event} event
+	 */
+	#handleColorChange( event )
+	{
+		const target = event.currentTarget;
+		if ( target.name !== "color" )
+		{
+			return;
+		}
+
+		if ( !this.#controller.signal.aborted )
+		{
+			this.#biome = Number( target.value );
+			this.#brushTitle.innerText = rusName( this.#biome );
+			//перезапускаем рисование
+			this.onStopPainting();
+			this.onStartPainting();
+		}	
+	}
+
+	/** Изменяет отображение цветов для кисти */
+	#changeBrushColorsView()
+	{
+		const labels = this.#brushSettings.querySelectorAll( "input + label.color" );
+
+		for ( let label of labels )
+		{
+			const i = Number( label.previousSibling.value );
+
+			const svg = label.firstChild;
+			const rect = svg.firstChild;
+			rect.removeAttribute( "fill" );
+
+			const biome = STYLES[ (this.#paletteIndex) ].biome( i );
+			const fill = biome.color.toHex();
+			rect.setAttribute( "fill", fill );
+			
+			const use = rect.nextSibling;
+			if ( !!use )
+				use.remove();
+			
+			if ( biome.hasPattern )
+			{
+				const newUse = document.createElementNS( SVG_NS, "use");
+				newUse.setAttribute( "x", "-25%" );
+				newUse.setAttribute( "y", "-25%" );
+				newUse.setAttribute( "width", "150%" );
+				newUse.setAttribute( "height", "150%" );
+				const href = `images/patterns/${ STYLES[this.#paletteIndex].name }.svg#${ biomeName( i ) }`;
+				newUse.setAttribute( "href", href );
+				svg.append( newUse );
+			}
+		}
+	}
+
+	/** Создаёт настройки инструментов */
+	#createSettings()
+	{
+		//после подписей к элементам
+		const labels = document.querySelectorAll( "label.tool" );
+		
+		for ( let label of labels )
+		{
+			switch ( label.htmlFor )
+			{
+				case "brush":
+					this.#createBrushSettings( label );
+					break;
+				
+				case "eraser":
+					this.#createEraserSettings( label );
+					break;
+	
+				case "style":
+					this.#createStyleSettings( label );
+					break;
+					
+				case "cursor":
+				default:
+					break;
+			}
+		}
+	}
+
+	/** Cоздаёт настройки ластика */
+	#createEraserSettings( labelBefore )
+	{
+		const settings = document.createElement( "div" );
+		settings.classList.add( "settings", "row" );
+
+		//элемент для установки размера
+		const input = document.createElement( "input" );
+		input.classList.add( "field" );
+		input.setAttribute( "type", "number" );
+		input.setAttribute( "id", "eraser-size" );
+		input.setAttribute( "min", "1" );
+		input.setAttribute( "max", MAX_PAINT_SIZE );
+		input.setAttribute( "value", this.#eraserSize );
+
+		const label = document.createElement( "label" );
+		label.append( "Размер" );
+		label.setAttribute( "for", "eraser-size" )
+
+		input.addEventListener(
+			"input",
+			( event ) => { this.#handleSizeInput( event ); }
+		);
+		input.addEventListener(
+			'blur',
+			( event ) => { event.currentTarget.value = this.#eraserSize; },
+		);
+
+		settings.append( label, input );
+		labelBefore.after( settings );
+
+		this.#eraserSettings = settings;
+	}
+
+	/** Cоздаёт настройки для стиля */
+	#createStyleSettings( labelBefore )
+	{
+		const settings = document.createElement( "div" );
+		settings.classList.add( "settings", "column" );
+
+		const p = document.createElement( "p" );
+		
+		this.#styleTitle = document.createElement( "span" );
+		this.#styleTitle.classList.add( "title" );
+		p.append( "Набор: ", this.#styleTitle );
+		this.#styleTitle.append( STYLES[0].rusName );
+
+		//палитра с отображением стилей
+		const ul = document.createElement( "ul" );
+		ul.classList.add( "palette_two", "none-list" );
+
+		for ( let i = 0; i < STYLES.length; i++ )
+		{
+			const li = document.createElement( "li" );
+			
+			//скрытый радио-переключатель
+			const input = document.createElement( "input" );
+			input.classList.add( "none-radio" );
+			input.setAttribute( "type", "radio" );
+			input.setAttribute( "name", "style" );
+			input.setAttribute( "id", STYLES[i].name );
+			input.setAttribute( "value", i );
+			if ( i === 0 )
+			{
+				input.setAttribute( "checked", "" );
+			}
+			
+			//подпись к нему
+			const label = document.createElement( "label" );
+			label.classList.add( "color" );
+			label.setAttribute( "for", STYLES[i].name );
+			label.setAttribute( "title", STYLES[i].rusName );
+
+			//содержит svg-изображение
+			const svg = document.createElementNS( SVG_NS, "svg");
+			svg.classList.add( "color__icon" );
+			svg.setAttribute( "role", "presentation" );
+			svg.setAttribute( "width", "20" );
+			svg.setAttribute( "height", "20" );
+			const rect = document.createElementNS( SVG_NS, "rect");
+			rect.setAttribute( "width", "100%" );
+			rect.setAttribute( "height", "100%" );
+			svg.append( rect );
+
+			const biome = STYLES[i].data[Biomes.FOREST];
+			const fill = biome.color.toHex();
+			rect.setAttribute( "fill", fill );
+			
+			if ( biome.hasPattern )
+			{
+				const use = document.createElementNS( SVG_NS, "use");
+				use.setAttribute( "x", "-25%" );
+				use.setAttribute( "y", "-25%" );
+				use.setAttribute( "width", "150%" );
+				use.setAttribute( "height", "150%" );
+				const href = `images/patterns/${STYLES[i].name}.svg#forest`;
+				use.setAttribute( "href", href );
+				svg.append( use );
+			}
+			label.append( svg );
+			 
+			li.append( input, label );
+			ul.append( li );
+
+			input.addEventListener(
+				"change",
+				( event ) => { this.#handleStyleChange( event ); },
+			);
+		}
+		
+		settings.append( p, ul );
+		labelBefore.after( settings );
+		this.#styleSettings = settings;
+	}
+
+	/** Cоздаёт настройки кисти */
+	#createBrushSettings( labelBefore )
+	{
+		const settings = document.createElement( "div" );
+		settings.classList.add( "settings", "column" );
+
+		const div = document.createElement( "div" );
+		div.classList.add( "row" );
+
+		//элемент для установки размера
+		const input = document.createElement( "input" );
+		input.classList.add( "field" );
+		input.setAttribute( "type", "number" );
+		input.setAttribute( "id", "brush-size" );
+		input.setAttribute( "min", "1" );
+		input.setAttribute( "max", MAX_PAINT_SIZE );
+		input.setAttribute( "value", this.#brushSize );
+
+		const label = document.createElement( "label" );
+		label.append( "Размер" );
+		label.setAttribute( "for", "brush-size" )
+
+		input.addEventListener(
+			"input",
+			( event ) => { this.#handleSizeInput( event ); }
+		);
+		input.addEventListener(
+			'blur',
+			( event ) => { event.currentTarget.value = this.#brushSize; },
+		);
+
+		div.append( label, input );
+		settings.append( div )
+
+		const p = document.createElement( "p" );
+		this.#brushTitle = document.createElement( "span" );
+		this.#brushTitle.classList.add( "title" );
+		p.append( "Тип территории: ", this.#brushTitle );
+		this.#brushTitle.append( rusName( 1 ) );
+
+		//палитра с отображением биомов
+		const ul = document.createElement( "ul" );
+		ul.classList.add( "palette_three", "none-list" );
+
+		for ( let i = 1; i <= BIOMES_COUNT; i++ )
+		{
+			const li = document.createElement( "li" );
+
+			const input = document.createElement( "input" );
+			input.classList.add( "none-radio" );
+			input.setAttribute( "type", "radio" );
+			input.setAttribute( "name", "color" );
+			input.setAttribute( "id", biomeName( i ) );
+			input.setAttribute( "value", i );
+			if ( i === 1 )
+			{
+				input.setAttribute( "checked", "" );
+			}
+			
+			const label = document.createElement( "label" );
+			label.classList.add( "color" );
+			label.setAttribute( "for", biomeName( i ) );
+			label.setAttribute( "title", rusName( i ) );
+
+			const svg = document.createElementNS( SVG_NS, "svg");
+			svg.classList.add( "color__icon" );
+			svg.setAttribute( "role", "presentation" );
+			svg.setAttribute( "width", "20" );
+			svg.setAttribute( "height", "20" );
+			const rect = document.createElementNS( SVG_NS, "rect");
+			rect.setAttribute( "width", "100%" );
+			rect.setAttribute( "height", "100%" );
+			svg.append( rect );
+
+			const biome = ( STYLES[this.#paletteIndex].biome( i ) );
+			const fill = biome.color.toHex();
+			rect.setAttribute( "fill", fill );
+			
+			if ( biome.hasPattern )
+			{
+				const use = document.createElementNS( SVG_NS, "use");
+				use.setAttribute( "x", "-25%" );
+				use.setAttribute( "y", "-25%" );
+				use.setAttribute( "width", "150%" );
+				use.setAttribute( "height", "150%" );
+				const href = `images/patterns/${ STYLES[this.#paletteIndex].name }.svg#${ biomeName( i ) }`;
+				use.setAttribute( "href", href );
+				svg.append( use );
+			}
+			label.append( svg );
+			 
+			li.append( input, label );
+			ul.append( li );
+
+			input.addEventListener(
+				"change",
+				( event ) => { this.#handleColorChange( event ); },
+			);
+		}
+		
+		settings.append( p, ul );
+		labelBefore.after( settings );
+		this.#brushSettings = settings;
+	}
+
+}
+
+
+
+/**
+ * Возвращает число из поля ввода в пределах диапазана
+ * 
+ * @param {HTMLInputElement} input
+ */
+function getNumber( input )
+{
+	return Math.min(
+		Math.max(
+			input.min,
+			input.value
+		),
+		input.max
+	);
 }

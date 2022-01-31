@@ -192,7 +192,7 @@ export class Palette
 	}
 
 	/**
-	 * Название палитры
+	 * Название палитры / SVG-файл с узорами
 	 */
 	get name()
 	{
@@ -200,7 +200,7 @@ export class Palette
 	}
 
 	/**
-	 * SVG-файл с узорами
+	 * Название палитры на русском
 	 */
 	get rusName()
 	{
@@ -213,6 +213,28 @@ export class Palette
 	get data()
 	{
 		return this.#data;
+	}
+
+	/**
+	 * Отображение данного биома
+	 * @param {Biomes} code код биома
+	 * @returns {BiomeView}
+	 */
+	biome( code )
+	{
+		if ( this.#data[code].biome === code)
+			return ( this.#data[code] );
+		else
+		{
+			for ( let i = 0; i < this.#data.length; i++ )
+			{
+				if ( this.#data[i].biome === code)
+				{
+					return ( this.#data[i] );
+				}
+			}
+			return null;
+		}
 	}
 	
 }
