@@ -173,18 +173,16 @@ export class Toolkit
 	 * Выбранный биом
 	 * @returns {Biomes | null} 
 	 */
-	get color()
+	get biome()
 	{
 		switch ( this.#checked )
 		{
-			case "brush":
-				return this.#biome;
+			case Tools.BRUSH:
+				return ( this.#biome );
 			
-			case "eraser":
+			case Tools.ERASER:
 				return Biomes.NONE;
 
-			case "style":
-			case "cursor":
 			default:
 				return null;
 		}
@@ -198,14 +196,12 @@ export class Toolkit
 	{
 		switch ( this.#checked )
 		{
-			case "brush":
+			case Tools.BRUSH:
 				return this.#brushSize;
 			
-			case "eraser":
+			case Tools.ERASER:
 				return this.#eraserSize;
 
-			case "style":
-			case "cursor":
 			default:
 				return null;
 		}

@@ -1,19 +1,19 @@
-import { MainMenu } from "./MainMenu.js";
+import { DrawingWorkplace } from "./DrawingWorkplace.js";
+import { Toolkit } from "./Toolkit.js";
 import { Editor } from "./Editor.js";
 import { MapMaker } from "./MapMaker.js";
+import { MainMenu } from "./MainMenu.js";
 
 function main()
 {
 	const canvas = document.getElementById( "drawing-canvas" );
 	const sizeForm = document.forms.namedItem( "new-size" );
-	const tools = document.querySelector( ".toolbar" );
 	const menu = document.querySelector( "header .horizontal-menu" );
 	const zoom = document.getElementById( "zoom" );
 	
 	if ( 
 		!canvas || !( canvas instanceof HTMLCanvasElement )
 		|| !sizeForm
-		|| !tools
 		|| !zoom
 		|| !menu
 	)
@@ -21,7 +21,11 @@ function main()
 		return;
 	}
 	
-	const editor = new Editor( canvas, tools, zoom );
+	const workplace = new DrawingWorkplace(	canvas, zoom );
+
+	const toolkit = new Toolkit();
+
+	const editor = new Editor( workplace, toolkit );
 
 	const app = new MapMaker( canvas, sizeForm, editor );
 	

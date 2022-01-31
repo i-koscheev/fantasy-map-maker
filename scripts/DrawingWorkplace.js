@@ -50,6 +50,12 @@ export class DrawingWorkplace
 	 * @type {number}
 	 */
 	#height;
+
+	/**
+	 * Действие при изменении размера
+	 * @type {() => void}
+	 */
+	onRescale = () => {};
 	
 	/**
 	 * Масштабируемый холст для рисования
@@ -97,6 +103,7 @@ export class DrawingWorkplace
 	 */
 	init( width, height )
 	{
+		this.#scale = Number( this.#selector.value );
 		//устанавливаем изначальные размеры
 		this.#width = width;
 		this.#height = height;
@@ -149,17 +156,22 @@ export class DrawingWorkplace
 		return this.#context;
 	}
 
+	/** Масштаб */
+	get scale()
+	{
+		return this.#scale;
+	}
 
-	// get width()
-	// {
-	// 	return this.#width;
-	// }
-
-	// get height()
-	// {
-	// 	return this.#height;
-	// }
-
+	/**
+	 * Очистка холста
+	 */
+	clear()
+	{
+		this.#context.save();
+		this.#context.setTransform(1, 0, 0, 1, 0, 0);
+		this.#context.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+		this.#context.restore();
+	}
 
 	/**
 	 * Изменение масштаба
@@ -171,9 +183,16 @@ export class DrawingWorkplace
 		const h = this.#height * this.#scale;
 		if ( this.#canvas.width !== w || this.#canvas.height !== h)
 		{	
+			/*const buffer = this.#context.getImageData( 
+				0,
+				0,
+				this.#canvas.width,
+				this.#canvas.height
+			);*/
 			this.#canvas.width = w;
-			this.#canvas.height = h;
-			this.#context.scale( w, h );
+			this.#canvas.height = h;		
+			this.#context.scale( this.#scale, this.#scale );
+			this.onRescale();
 		}
 	}
 

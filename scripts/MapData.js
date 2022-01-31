@@ -32,6 +32,14 @@ export class MapData
 		this.#data = new Uint8Array( width * height );
 	}
 
+	init()
+	{
+		for ( let i = 0; i < this.#data.length; i++ )
+		{
+			this.#data[i] = 0;
+		}
+	}
+
 	/**
 	 * Возвращает одномерный массив с кодами пикселей
 	 */
