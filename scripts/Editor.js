@@ -2,6 +2,7 @@ import { DrawingWorkplace } from "./DrawingWorkplace.js";
 import { Toolkit } from "./Toolkit.js";
 import { MapData } from "./MapData.js";
 import { STYLES } from "./Styles.js";
+import { ImageTracer } from "./ImageTracer.js";
 
 /**
  * Класс для редактирования карты
@@ -44,18 +45,27 @@ export class Editor
 	 */
 	#drawingMode = false;
 
+	#svg;
+
+	#container;
+
+	#imageTracer;
+
 	#handleСlickBounded;
+
 
 	/**
 	 * Редактор карты
 	 * 
 	 * @param {DrawingWorkplace} workplace Пространство для рисования
 	 * @param {Toolkit} toolkit Набор инструментов
+	 * @parm {HTMLElement}
 	 */
-	constructor( workplace, toolkit )
+	constructor( workplace, toolkit, container )
 	{		
 		this.#toolkit = toolkit;
 		this.#workplace = workplace;
+		this.#container = container;
 
 		workplace.onRescale = () => { this.#rescale(); };
 
@@ -64,6 +74,8 @@ export class Editor
 		toolkit.onStopPainting = () => { this.#stopDrawing(); };
 
 		toolkit.onStyleChange = () => { this.#changeStyle(); };
+		
+		this.#imageTracer = new ImageTracer();
 
 		this.#handleСlickBounded = this.#handleСlick.bind( this );
 	}
@@ -85,9 +97,11 @@ export class Editor
 	{
 		this.#mapData = new MapData( width, height );
 		this.#mapData.init();
-		
+
 		this.#workplace.init( width, height );
 		this.#toolkit.init();
+
+		this.#newSvg();
 	}
 
 	/** Начало рисования */
@@ -110,6 +124,7 @@ export class Editor
 			"click",
 			this.#handleСlickBounded
 		)
+
 	}
 
 	/** Завершение рисования */
@@ -121,13 +136,27 @@ export class Editor
 			this.#handleСlickBounded
 		);
 
-		// console.log( this.#mapData.data );
+		this.#newSvg();
+	}
+
+	#newSvg()
+	{
+		this.#svg = this.#imageTracer.mapDataToSVG(
+			this.#mapData,
+			this.#toolkit.styleIndex,
+			this.#workplace.scale
+		);
+		console.log( this.#svg )
+		
+		const bg = window.btoa( this.#svg );
+		this.#container.style.background = 'url("data:image/svg+xml; base64, '+ bg + '") no-repeat center';
 	}
 
 	/** Смена стиля */
 	#changeStyle()
 	{
 		//перерисовка
+		this.#newSvg()
 	}
 
 	/** Смена масштаба */
@@ -140,7 +169,6 @@ export class Editor
 	/** Переносит на холст все области данной территории c текущей карты */
 	#drawBiome()
 	{
-		console.log( "loong " );
 		this.#workplace.context.fillStyle = this.#drawingColor;
 		for ( let y = 0; y < this.#mapData.height; y++ )
 		{

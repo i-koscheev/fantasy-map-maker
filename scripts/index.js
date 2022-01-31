@@ -25,7 +25,8 @@ function main()
 
 	const toolkit = new Toolkit();
 
-	const editor = new Editor( workplace, toolkit );
+	const container = canvas.parentElement;
+	const editor = new Editor( workplace, toolkit, container );
 
 	const app = new MapMaker( canvas, sizeForm, editor );
 	

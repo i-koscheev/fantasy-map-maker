@@ -153,7 +153,7 @@ export class SizeSetter
 	{
 		this.#inputWidth.value = this.#inputWidth.defaultValue;
 		this.#inputWidth.disabled = false;
-		this.#width = this.#inputWidth.defaultValue;
+		this.#width = Number( this.#inputWidth.defaultValue );
 		this.#element.width = this.#width;
 
 		this.#inputWidth.addEventListener(
@@ -174,7 +174,7 @@ export class SizeSetter
 	{
 		this.#inputHeight.value = this.#inputHeight.defaultValue;
 		this.#inputHeight.disabled = false;
-		this.#height = this.#inputHeight.defaultValue;
+		this.#height = Number( this.#inputHeight.defaultValue );
 		this.#element.height = this.#height;
 		
 		this.#inputHeight.addEventListener(
