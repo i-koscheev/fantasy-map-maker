@@ -346,10 +346,10 @@ export class Toolkit
 
 		if ( !this.#controller.signal.aborted )
 		{
-			this.#paletteIndex = target.value;
+			this.#paletteIndex = Number( target.value );
 			this.#styleTitle.innerText = STYLES[ this.#paletteIndex ].rusName;
+			this.#changeBrushColorsView();
 			this.onStyleChange();
-			this.#changeBrushColorsView()
 		}
 		
 	}

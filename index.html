@@ -112,6 +112,7 @@
 				<option value="1" selected>100%</option>
 				<option value="2">200%</option>
 				<option value="5">500%</option>
+				<option value="10">1000%</option>
 			</select>
 			<button type="button" class="button" disabled>
 				<svg role="presentation" width="20" height="20" class="button__icon">
@@ -122,17 +123,17 @@
 	</aside>
 
 	<main>
-		<aside class="modal">
-			<div class="column size-dialog">
+		<aside class="modal size-dialog">
+			<div class="column">
 				<h2>Новая карта</h2>
 				<p>Задайте размеры холста</p>
 				<form id="new-size" name="new-size">
 					<input type="number" class="field" name="width"
-						min="80" max="1920" step="1" value="640"
+						min="40" max="1920" step="1" value="640"
 					/>
 					<label>×
 						<input type="number" class="field" name="height"
-							min="80" max="1920" step="1" value="640"
+							min="40" max="1920" step="1" value="640"
 						/>
 					</label>
 				</form>

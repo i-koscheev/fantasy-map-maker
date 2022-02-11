@@ -109,6 +109,7 @@ export class DrawingWorkplace
 		this.#height = height;
 		this.#canvas.width = width * this.#scale;
 		this.#canvas.height = height * this.#scale;
+		this.#context.scale( this.#scale, this.#scale );
 
 		//настраиваем работу селектора масштаба
 		this.#selector.addEventListener( "input", this.rescale );
@@ -126,6 +127,7 @@ export class DrawingWorkplace
 	/** Завершение работы */
 	shutdown()
 	{
+		this.clear();
 		this.#selector.disabled = true;
 		this.#selector.removeEventListener( "input", this.rescale );
 		if ( !!this.#minusButton )
@@ -182,13 +184,7 @@ export class DrawingWorkplace
 		const w = this.#width * this.#scale;
 		const h = this.#height * this.#scale;
 		if ( this.#canvas.width !== w || this.#canvas.height !== h)
-		{	
-			/*const buffer = this.#context.getImageData( 
-				0,
-				0,
-				this.#canvas.width,
-				this.#canvas.height
-			);*/
+		{
 			this.#canvas.width = w;
 			this.#canvas.height = h;		
 			this.#context.scale( this.#scale, this.#scale );

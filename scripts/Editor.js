@@ -22,6 +22,12 @@ export class Editor
 	#toolkit;
 
 	/**
+	 * Контейнер, содержащий холст для рисования
+	 * @type {HTMLElement}
+	 */
+	#container;
+
+	/**
 	 * Пиксельная карта
 	 * @type {MapData}
 	 */
@@ -45,9 +51,13 @@ export class Editor
 	 */
 	#drawingMode = false;
 
-	#svg;
+	/**
+	 * Изменился ли холст при рисовании
+	 * @type {boolean}
+	 */
+	#hasChanged = false;
 
-	#container;
+	#svg;
 
 	#imageTracer;
 
@@ -59,7 +69,7 @@ export class Editor
 	 * 
 	 * @param {DrawingWorkplace} workplace Пространство для рисования
 	 * @param {Toolkit} toolkit Набор инструментов
-	 * @parm {HTMLElement}
+	 * @parm {HTMLElement} container Родительский блок для холста
 	 */
 	constructor( workplace, toolkit, container )
 	{		
@@ -85,6 +95,7 @@ export class Editor
 	{
 		this.#workplace.shutdown();
 		this.#toolkit.shutdown();
+		this.#container.style.background = null;
 	}
 
 	/** 
@@ -107,18 +118,19 @@ export class Editor
 	/** Начало рисования */
 	#startDrawing()
 	{	
-		this.#workplace.clear();
+		this.#workplace.canvas.style.background = "rgba(0,0,0,0.1)";
 		
 		this.#biome = this.#toolkit.biome;
 		const biomeView = STYLES[ (this.#toolkit.styleIndex) ].biome( this.#biome );
-
 		this.#drawingColor = 
 			( !biomeView.drawingСolor )
 			? biomeView.color.toHex()
 			: biomeView.drawingСolor.toHex();
-		this.#drawingMode = true;
 
 		this.#drawBiome();
+		
+		this.#drawingMode = true;
+		this.#hasChanged = false;
 
 		this.#workplace.canvas.addEventListener(
 			"click",
@@ -135,8 +147,13 @@ export class Editor
 			"click",
 			this.#handleСlickBounded
 		);
+		this.#workplace.clear();
+		this.#workplace.canvas.style.background = "";
 
-		this.#newSvg();
+		if ( this.#hasChanged )
+		{
+			this.#newSvg();
+		}
 	}
 
 	#newSvg()
@@ -146,10 +163,11 @@ export class Editor
 			this.#toolkit.styleIndex,
 			this.#workplace.scale
 		);
-		console.log( this.#svg )
+		// console.log( this.#svg );
 		
 		const bg = window.btoa( this.#svg );
-		this.#container.style.background = 'url("data:image/svg+xml; base64, '+ bg + '") no-repeat center';
+		this.#container.style.background = 'url("data:image/svg+xml; base64, '
+			+ bg + '") no-repeat center';
 	}
 
 	/** Смена стиля */
@@ -162,7 +180,8 @@ export class Editor
 	/** Смена масштаба */
 	#rescale()
 	{
-		this.#drawBiome();
+		if ( this.#drawingMode )
+			this.#drawBiome();
 	}
 
 
@@ -197,7 +216,6 @@ export class Editor
 			//случай в конце строки
 			if ( start !== -1 )
 			{
-				//this.#workplace.context.fillStyle = this.#drawingColor;
 				this.#workplace.context.fillRect( start, y, (this.#mapData.width - start), 1 );
 			}
 		}
@@ -211,15 +229,16 @@ export class Editor
 	{
 		if ( this.#drawingMode )
 		{
+			this.#hasChanged = true;
 
 			const rect = this.#workplace.canvas.getBoundingClientRect();
 		
 			const x = event.clientX - (rect.left + window.pageXOffset);
 			const y = event.clientY - (rect.top + window.pageYOffset);
-			const x0 = Math.round( x / this.#workplace.scale );
-			const y0 = Math.round( y / this.#workplace.scale );
+			const x0 = x / this.#workplace.scale;
+			const y0 = y / this.#workplace.scale;
 			
-			this.#drawCircle( x0, y0, this.#toolkit.paintSize);
+			this.#drawCircle( x0, y0, this.#toolkit.paintSize );
 		}
 	}
 
@@ -237,14 +256,14 @@ export class Editor
 			const add = y * this.#mapData.width;
 			const start = add + Math.max(x0, 0);
 			const end = add + Math.min(x1, this.#mapData.width);
-		
+	
 			for( let i = start; i < end; i++ )
 			{
 				this.#mapData.data[i] = this.#biome;
 			}
 			
 			this.#workplace.context.fillStyle = this.#drawingColor;
-			this.#workplace.context.fillRect( x0, y, (x1 - x0), 1 );
+			this.#workplace.context.fillRect( x0, y, x1-x0, 1 );
 		}
 	}
 
@@ -254,49 +273,88 @@ export class Editor
 	 */
 
 	/**
-	 * Рисует "пиксельный" круг на карте
-	 * @param {number} centerX координаты центра
-	 * @param {number} centerY координаты центра
-	 * @param {number} radius радиус
+	 * Рисует круг на карте
+	 * @param {number} x0 координаты центра
+	 * @param {number} y0 координаты центра
+	 * @param {number} diameter диаметр
 	 */
-	#drawCircle( centerX, centerY, radius )
+	#drawCircle( x0, y0, diameter )
 	{
-		let x = Math.round( radius );
-		let y = 0;
-		let radiusError = 1 - x;
-
-		while ( x >= y )
+		let d = Math.round( diameter );
+		
+		if ( d % 2 === 1 )
 		{
-			let startX = centerX - x;
-			let endX = centerX + x;
-			this.#drawHorizontalLine( startX, endX, centerY - y );
-			if (y != 0)
+			//случай с нечётным диаметром
+			let centerX = Math.floor( x0 );
+			let centerY = Math.floor( y0 );
+
+			let x = (d - 1) / 2;
+			let y = 0;
+			let error = 1 - x;
+			while ( x >= y )
 			{
-				this.#drawHorizontalLine( startX, endX, centerY + y );
-			}
-			y++;
-			
-			if ( radiusError < 0 )
-			{
-				radiusError += 2 * y + 1;
-			}
-			else 
-			{
-				if (x >= y)
+				let startX = centerX - x;
+				let endX = centerX + x + 1;
+				this.#drawHorizontalLine( startX, endX, centerY - y );
+				if ( y !== 0 )
 				{
-					startX = -y + 1 + centerX;
-					endX = y - 1 + centerX;
-					this.#drawHorizontalLine( startX, endX, centerY + x );
-					this.#drawHorizontalLine( startX, endX, centerY - x );
+					this.#drawHorizontalLine( startX, endX, centerY + y );
 				}
-				x--;
-				radiusError += 2 * (y - x + 1);
+				y++;
+			
+				if ( error < 0 )
+				{
+					error += 2 * y + 1;
+				}
+				else 
+				{
+					if (x >= y)
+					{
+						startX = -y + 1 + centerX;
+						endX = y - 1 + centerX + 1;
+						this.#drawHorizontalLine( startX, endX, centerY + x );
+						this.#drawHorizontalLine( startX, endX, centerY - x );
+					}
+					x--;
+					error += 2 * (y - x + 1);
+				}
 			}
 		}
+		else
+		{
+			//случай с чётным диаметром
+			let centerX = Math.floor( x0 + 0.5 );
+			let centerY = Math.floor( y0 + 0.5 );
+
+			let x = d / 2;
+			let y = 0;
+			let error = 2 - x;
+			while ( x >= y )
+			{
+				let startX = centerX - x;
+				let endX = centerX + x;
+				this.#drawHorizontalLine( startX, endX, centerY - y - 1 );
+				this.#drawHorizontalLine( startX, endX, centerY + y );
+				y++;
+			
+				if ( error < 0 )
+				{
+					error += 2 * y + 2;
+				}
+				else 
+				{
+					if (x >= y)
+					{
+						startX = -y + centerX;
+						endX = y + centerX;
+						this.#drawHorizontalLine( startX, endX, centerY + x - 1 );
+						this.#drawHorizontalLine( startX, endX, centerY - x );
+					}
+					x--;
+					error += 2 * (y - x + 2);
+				}
+			}
+		}
+		
 	}
-
-	
-
-
-
 }

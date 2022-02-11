@@ -107,8 +107,7 @@ h2
 {
 	display: none;
 	position: fixed;
-	top: 40%;
-	align-self: center;	
+	align-self: center;
 	margin: 1rem;
 	padding: 1.5rem 2rem 2rem 2rem;
 	border-radius: 5px;
@@ -135,8 +134,14 @@ h2
 
 .size-dialog 
 {
-	row-gap: 1rem;
+	top: calc( 50% - 6.25rem );
+	min-width: 12rem;
 }
+
+	.size-dialog .column
+	{
+		row-gap: 1rem;
+	}
 
 	.size-dialog h2
 	{
