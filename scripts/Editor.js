@@ -1,5 +1,5 @@
 import { DrawingWorkplace } from "./DrawingWorkplace.js";
-import { Toolkit } from "./Toolkit.js";
+import { Toolkit, SVG_NS } from "./Toolkit.js";
 import { MapData } from "./MapData.js";
 import { STYLES } from "./Styles.js";
 import { ImageTracer } from "./ImageTracer.js";
@@ -57,11 +57,29 @@ export class Editor
 	 */
 	#hasChanged = false;
 
+	/**
+	 * Указатель для рисования
+	 * @type {CircleCursor}
+	 */
+	#cursor;
+
+	/**
+	 * Обёртка для обработки событий мыши
+	 * @type {HTMLElement}
+	 */
+	 #wrapper;
+
 	#svg;
 
 	#imageTracer;
 
 	#handleСlickBounded;
+
+	#handleMouseMoveBounded;
+
+	#handleMouseEnterBounded;
+
+	#handleMouseLeaveBounded;
 
 
 	/**
@@ -76,6 +94,7 @@ export class Editor
 		this.#toolkit = toolkit;
 		this.#workplace = workplace;
 		this.#container = container;
+		this.#wrapper = container.closest( ".clickable" );
 
 		workplace.onRescale = () => { this.#rescale(); };
 
@@ -84,10 +103,19 @@ export class Editor
 		toolkit.onStopPainting = () => { this.#stopDrawing(); };
 
 		toolkit.onStyleChange = () => { this.#changeStyle(); };
+
+		toolkit.onPaintSizeChange = () => {
+			this.#cursor.resize( this.#toolkit.paintSize * this.#workplace.scale );
+		};
 		
 		this.#imageTracer = new ImageTracer();
 
+		this.#cursor = new CircleCursor( this.#container );
+
 		this.#handleСlickBounded = this.#handleСlick.bind( this );
+		this.#handleMouseMoveBounded = this.#handleMouseMove.bind( this );
+		this.#handleMouseEnterBounded = this.#handleMouseEnter.bind( this );
+		this.#handleMouseLeaveBounded = this.#handleMouseLeave.bind( this );
 	}
 
 	/** Завершение работы */
@@ -95,6 +123,10 @@ export class Editor
 	{
 		this.#workplace.shutdown();
 		this.#toolkit.shutdown();
+		if ( this.#drawingMode )
+		{	
+			this.#stopDrawing();
+		}
 		this.#container.style.background = null;
 	}
 
@@ -118,7 +150,7 @@ export class Editor
 	/** Начало рисования */
 	#startDrawing()
 	{	
-		this.#workplace.canvas.style.background = "rgba(0,0,0,0.1)";
+		// this.#workplace.canvas.style.background = "rgba(0,0,0,0.1)";
 		
 		this.#biome = this.#toolkit.biome;
 		const biomeView = STYLES[ (this.#toolkit.styleIndex) ].biome( this.#biome );
@@ -132,23 +164,17 @@ export class Editor
 		this.#drawingMode = true;
 		this.#hasChanged = false;
 
-		this.#workplace.canvas.addEventListener(
-			"click",
-			this.#handleСlickBounded
-		)
-
+		this.#cursor.resize( this.#toolkit.paintSize * this.#workplace.scale );
+		this.#addMouseEventListeners();
 	}
 
 	/** Завершение рисования */
 	#stopDrawing()
 	{
 		this.#drawingMode = false;
-		this.#workplace.canvas.removeEventListener(
-			"click",
-			this.#handleСlickBounded
-		);
+		this.#removeMouseEventListeners();
 		this.#workplace.clear();
-		this.#workplace.canvas.style.background = "";
+		// this.#workplace.canvas.style.background = null;
 
 		if ( this.#hasChanged )
 		{
@@ -181,9 +207,11 @@ export class Editor
 	#rescale()
 	{
 		if ( this.#drawingMode )
+		{	
 			this.#drawBiome();
+			this.#cursor.resize( this.#toolkit.paintSize * this.#workplace.scale );
+		}
 	}
-
 
 	/** Переносит на холст все области данной территории c текущей карты */
 	#drawBiome()
@@ -220,9 +248,76 @@ export class Editor
 			}
 		}
 	}
+
+	/** Присоединяет обработчики событий мыши */
+	#addMouseEventListeners()
+	{
+		this.#wrapper.style.cursor = "none";
+		this.#wrapper.addEventListener(
+			'mouseenter',
+			this.#handleMouseEnterBounded
+		);
+		this.#wrapper.addEventListener(
+			'mouseleave',
+			this.#handleMouseLeaveBounded
+		);
+		this.#wrapper.addEventListener(
+			'mousemove',
+			this.#handleMouseMoveBounded
+		);
+		this.#wrapper.addEventListener(
+			"click",
+			this.#handleСlickBounded
+		);
+	}
+
+	/** Убирает обработчики событий мыши */
+	#removeMouseEventListeners()
+	{
+		this.#wrapper.removeEventListener(
+			"click",
+			this.#handleСlickBounded
+		);	
+		this.#wrapper.removeEventListener(
+			'mousemove',
+			this.#handleMouseMoveBounded
+		);
+		this.#wrapper.removeEventListener(
+			'mouseenter',
+			this.#handleMouseEnterBounded
+		);
+		this.#wrapper.removeEventListener(
+			'mouseleave',
+			this.#handleMouseLeaveBounded
+		);
+		this.#wrapper.style.cursor = "default";
+	}
+
+	/** Обрабатывает наведение указателя */
+	#handleMouseEnter()
+	{
+		this.#cursor.show();
+	}
+
+	/** Исчезновение указателя */
+	#handleMouseLeave()
+	{
+		this.#cursor.hide();
+	} 
 	
 	/**
-	 * Обработка клика по холсту
+	 * Обрабатывает перемещение курсора по холсту
+	 * @param {MouseEvent} event
+	 */
+	#handleMouseMove( event )
+	{
+		const x = event.clientX;
+		const y = event.clientY;
+		this.#cursor.move( x, y );
+	} 
+	
+	/**
+	 * Обрабатывает клик по холсту
 	 * @param {MouseEvent} event
 	 */
 	#handleСlick( event )
@@ -233,8 +328,8 @@ export class Editor
 
 			const rect = this.#workplace.canvas.getBoundingClientRect();
 		
-			const x = event.clientX - (rect.left + window.pageXOffset);
-			const y = event.clientY - (rect.top + window.pageYOffset);
+			const x = event.clientX - (rect.left + window.scrollX);
+			const y = event.clientY - (rect.top + window.scrollY);
 			const x0 = x / this.#workplace.scale;
 			const y0 = y / this.#workplace.scale;
 			
@@ -242,7 +337,7 @@ export class Editor
 		}
 	}
 
-
+	
 	/**
 	 * Горизонтальная линия
 	 * @param {number} x0 
@@ -356,5 +451,124 @@ export class Editor
 			}
 		}
 		
+	}
+}
+
+
+/**
+ * Указатель мыши в виде окружности
+ */
+class CircleCursor
+{
+	/** Элемент */
+	#svg;
+
+	/** Окружность */
+	#circle;
+
+	/** Крест в центре */
+	#cross;
+
+	/**
+	 * Половина стороны
+	 * @type {number}
+	 */
+	#halfSize = 0;
+
+	/**
+	 * Указатель мыши в виде окружности
+	 * @param {HTMLElement} content Блок, поверх которого отображается курсор
+	 */
+	constructor( content )
+	{
+		const svg = document.createElementNS( SVG_NS, "svg" );
+		svg.style.display = "none";
+		svg.style.position = "fixed";
+		svg.style.zIndex = "-1";
+		svg.style.pointerEvents = "none";
+		svg.style.userSelect = "none";
+		svg.style.cursor = "none";
+		svg.setAttribute( "fill", "none" );
+		svg.setAttribute( "filter", "drop-shadow(0 0 1px black)" );
+		
+		const circle = document.createElementNS( SVG_NS, "circle");
+		circle.setAttribute( "fill", "none" );
+		circle.setAttribute( "stroke", "white" );
+		circle.setAttribute( "stroke-width", "2" );
+		svg.append( circle );
+		this.#circle = circle;
+
+		const cross = document.createElementNS( SVG_NS, "svg");
+		cross.setAttribute( "width", "16" );
+		cross.setAttribute( "height", "16" );
+		const path = document.createElementNS( SVG_NS, "path");
+		path.setAttribute( "d", "M 8 0 v 16 M 0 8 h 16" );
+		path.setAttribute( "stroke", "white" );
+		path.setAttribute( "stroke-width", "2" );
+		cross.append( path );
+		svg.append( cross );
+		this.#cross = cross;
+
+		content.style.position = "relative";
+		content.style.zIndex = "-2";
+		content.after( svg );
+		this.#svg = svg;
+	}
+
+	/** Показать */
+	show()
+	{
+		this.#svg.style.display = "block";
+	}
+
+	/** Скрыть */
+	hide()
+	{
+		this.#svg.style.display = "none";
+	}
+
+	/**
+	 * Изменить позицию
+	 * @param {number} x
+	 * @param {number} y
+	 */
+	move( x, y )
+	{
+		this.#svg.style.left = `${ x - this.#halfSize }px`;
+		this.#svg.style.top = `${ y - this.#halfSize }px`;
+	}
+
+	/**
+	 * Изменить размер указателя
+	 * @param {number} diameter
+	 */
+	resize( diameter )
+	{
+		const rect = this.#svg.getBoundingClientRect();
+		const x0 = rect.left + this.#halfSize;
+		const y0 = rect.top + this.#halfSize;
+
+		this.#svg.setAttribute( "width", diameter + 2 );
+		this.#svg.setAttribute( "height", diameter + 2 );
+		let half = diameter / 2 + 1;
+		this.#halfSize = half;
+		
+		this.#circle.setAttribute( "cx", half );
+		this.#circle.setAttribute( "cy", half );
+		this.#circle.setAttribute( "r", half - 1 );
+
+		if ( diameter > 70 )
+		{
+			half = Math.floor( half );
+			this.#cross.setAttribute( "x", `${ half - 8 }` );
+			this.#cross.setAttribute( "y", `${ half - 8 }` );
+			this.#cross.removeAttribute( "display" );
+		}
+		else
+		{
+			this.#cross.setAttribute( "display", "none" );
+		}
+
+		this.move( x0, y0 );
 	}
 }
