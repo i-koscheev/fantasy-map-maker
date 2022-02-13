@@ -69,6 +69,19 @@ export class Editor
 	 */
 	#wrapper;
 
+	/**
+	 * Сетка
+	 * @type {Grid}
+	 */
+	#grid;
+
+	/**
+	 * Высота при рисовании одной линии.
+	 * Нужна для холста с масштабом меньшим 1 для непрозрачной отрисовки
+	 * @type {number}
+	 */
+	#h = 1;
+
 	#svg;
 
 	#imageTracer;
@@ -95,6 +108,10 @@ export class Editor
 		this.#workplace = workplace;
 		this.#container = container;
 		this.#wrapper = container.closest( ".clickable" );
+		this.#cursor = new CircleCursor( container );
+		this.#grid = new Grid( workplace.canvas );
+
+		this.#imageTracer = new ImageTracer();
 
 		workplace.onRescale = () => { this.#rescale(); };
 
@@ -107,10 +124,6 @@ export class Editor
 		toolkit.onPaintSizeChange = () => {
 			this.#cursor.resize( this.#toolkit.paintSize * this.#workplace.scale );
 		};
-		
-		this.#imageTracer = new ImageTracer();
-
-		this.#cursor = new CircleCursor( this.#container );
 
 		this.#handleСlickBound = this.#handleСlick.bind( this );
 		this.#handleMouseMoveBound = this.#handleMouseMove.bind( this );
@@ -149,22 +162,18 @@ export class Editor
 
 	/** Начало рисования */
 	#startDrawing()
-	{	
-		// this.#workplace.canvas.style.background = "rgba(0,0,0,0.1)";
-		
+	{
 		this.#biome = this.#toolkit.biome;
 		const biomeView = STYLES[ (this.#toolkit.styleIndex) ].biome( this.#biome );
 		this.#drawingColor = 
 			( !biomeView.drawingСolor )
 			? biomeView.color.toHex()
 			: biomeView.drawingСolor.toHex();
-
-		this.#drawBiome();
 		
 		this.#drawingMode = true;
 		this.#hasChanged = false;
-
-		this.#cursor.resize( this.#toolkit.paintSize * this.#workplace.scale );
+		this.#rescale();
+		this.#grid.show();
 		this.#addMouseEventListeners();
 	}
 
@@ -173,8 +182,8 @@ export class Editor
 	{
 		this.#drawingMode = false;
 		this.#removeMouseEventListeners();
+		this.#grid.hide();
 		this.#workplace.clear();
-		// this.#workplace.canvas.style.background = null;
 
 		if ( this.#hasChanged )
 		{
@@ -208,15 +217,20 @@ export class Editor
 	{
 		if ( this.#drawingMode )
 		{	
+			const newScale = this.#workplace.scale;
+			this.#grid.rescale( newScale );
+			this.#h = Math.ceil( 1 / newScale );
 			this.#drawBiome();
-			this.#cursor.resize( this.#toolkit.paintSize * this.#workplace.scale );
+			this.#cursor.resize( this.#toolkit.paintSize * newScale );
 		}
 	}
 
-	/** Переносит на холст все области данной территории c текущей карты */
+	/** Переносит на холст все области конкретной территории c текущей карты */
 	#drawBiome()
 	{
-		this.#workplace.context.fillStyle = this.#drawingColor;
+		const ctx = this.#workplace.context;
+		const h = this.#h;
+		ctx.fillStyle = this.#drawingColor;
 		for ( let y = 0; y < this.#mapData.height; y++ )
 		{
 			const add = y * this.#mapData.width;
@@ -236,7 +250,7 @@ export class Editor
 					if ( start !== -1 )
 					{
 						//линия закончилась
-						this.#workplace.context.fillRect( start, y, (x - start), 1 );
+						ctx.fillRect( start, y, (x - start), h );
 						start = -1;
 					}
 				}
@@ -244,7 +258,7 @@ export class Editor
 			//случай в конце строки
 			if ( start !== -1 )
 			{
-				this.#workplace.context.fillRect( start, y, (this.#mapData.width - start), 1 );
+				ctx.fillRect( start, y, (this.#mapData.width - start), h );
 			}
 		}
 	}
@@ -360,7 +374,7 @@ export class Editor
 			}
 			
 			this.#workplace.context.fillStyle = this.#drawingColor;
-			this.#workplace.context.fillRect( x0, y, x1-x0, 1 );
+			this.#workplace.context.fillRect( x0, y, x1-x0, this.#h );
 		}
 	}
 
@@ -572,5 +586,56 @@ class CircleCursor
 		}
 
 		this.move( x0, y0 );
+	}
+}
+
+
+/**
+ * Cетка
+ */
+class Grid
+{
+	/** Элемент */
+	#element;
+
+	/**
+	 * Сетка
+	 * @param {HTMLElement} element Блок, на фон которого устанавливается сетка 
+	 */
+	constructor( element )
+	{
+		this.#element = element;
+	}
+
+	/** Показать сетку */
+	show()
+	{
+		this.#element.classList.add( "grid-background" );
+	}
+
+	/** Скрыть сетку */
+	hide()
+	{
+		this.#element.classList.remove( "grid-background" );
+	}
+
+	/**
+	 * Изменить масштаб сетки
+	 * @param {number} scale
+	 */
+	rescale( scale )
+	{
+		const PX = [ 1, 2, 4, 5, 10, 20, 25, 50, 100 ];
+		let minor = 0;
+		for ( let i = 0; i < PX.length; i++ )
+		{
+			minor = PX[i] * scale;
+			if ( minor >= 15 )
+				break;
+		}
+		let major = 100 * scale;
+
+		this.#element.style.setProperty( "--minor-length", `${minor}px` );
+		this.#element.style.setProperty( "--major-length", `${major}px` );
 	}
 }
