@@ -52,10 +52,34 @@ export class DrawingWorkplace
 	#height;
 
 	/**
+	 * Прокручиваемый контейнер
+	 * @type {HTMLElement}
+	 */
+	#wrapper;
+
+	/**
+	 * Координата мыши
+	 * @type {number}
+	 */
+	#mouseX = 0;
+
+	/**
+	 * Координата мыши
+	 * @type {number}
+	 */
+	#mouseY = 0;
+
+	/**
 	 * Действие при изменении размера
 	 * @type {() => void}
 	 */
 	onRescale = () => {};
+
+	#rescaleBound;
+	
+	#minusScaleBound;
+		
+	#plusScaleBound;
 	
 	/**
 	 * Масштабируемый холст для рисования
@@ -79,20 +103,37 @@ export class DrawingWorkplace
 		this.#selector = selector;
 		this.#scale = Number( selector.value );
 
-		this.rescale = this.rescale.bind( this );
-		this.minusScale = this.minusScale.bind( this );
-		this.plusScale = this.plusScale.bind( this );
+		//прокручиваемый контейнер для рабочего пространства
+		this.#wrapper = canvas.closest( ".scrollable" );
+		this.#wrapper.addEventListener(
+			"mousemove",
+			( event ) => { this.#handleMouseMove( event ); },
+		)
+		this.#wrapper.addEventListener(
+			"mouseleave",
+			( ) => { this.#handleMouseLeave(); },
+		)
+
+		//события
+		document.addEventListener(
+			"wheel",
+			( event ) => { this.#handleWheel( event ); },
+			{ capture: true, passive: false }
+		)
+		this.#rescaleBound = this.#rescale.bind( this );
+		this.#minusScaleBound = this.#minusScale.bind( this );
+		this.#plusScaleBound = this.#plusScale.bind( this );
 
 		//кнопки для изменения масштаба
 		this.#minusButton = this.#selector.previousElementSibling;
 		if ( !!this.#minusButton )
 		{
-			this.#minusButton.addEventListener( "click", this.minusScale );
+			this.#minusButton.addEventListener( "click", this.#minusScaleBound );
 		}
 		this.#plusButton = this.#selector.nextElementSibling;
 		if ( !!this.#plusButton )
 		{
-			this.#plusButton.addEventListener( "click", this.plusScale );
+			this.#plusButton.addEventListener( "click", this.#plusScaleBound );
 		}
 	}
 
@@ -110,9 +151,13 @@ export class DrawingWorkplace
 		this.#canvas.width = width * this.#scale;
 		this.#canvas.height = height * this.#scale;
 		this.#context.scale( this.#scale, this.#scale );
+		
+		const el = this.#wrapper;
+		el.scrollTop = Math.floor( ( el.scrollHeight - el.clientHeight ) / 2 );
+		el.scrollLeft = Math.floor( ( el.scrollWidth - el.clientWidth ) / 2 );
 
 		//настраиваем работу селектора масштаба
-		this.#selector.addEventListener( "input", this.rescale );
+		this.#selector.addEventListener( "input", this.#rescaleBound );
 		this.#selector.disabled = false;
 		if ( !!this.#minusButton )
 		{	
@@ -129,7 +174,7 @@ export class DrawingWorkplace
 	{
 		this.clear();
 		this.#selector.disabled = true;
-		this.#selector.removeEventListener( "input", this.rescale );
+		this.#selector.removeEventListener( "input", this.#rescaleBound );
 		if ( !!this.#minusButton )
 		{
 			this.#minusButton.disabled = true;
@@ -178,24 +223,35 @@ export class DrawingWorkplace
 	/**
 	 * Изменение масштаба
 	 */
-	rescale()
+	#rescale()
 	{
 		this.#scale = Number( this.#selector.value );
 		const w = this.#width * this.#scale;
 		const h = this.#height * this.#scale;
 		if ( this.#canvas.width !== w || this.#canvas.height !== h)
 		{
+			const el = this.#wrapper;
+			let a = ( this.#mouseX - el.offsetLeft ) / el.clientWidth;
+			a = ( a < 0 || a > 1 ) ? 0.5 : a;
+			let b = ( this.#mouseY - el.offsetTop ) / el.clientHeight;
+			b = ( b < 0 || b > 1 ) ? 0.5 : b;
+			const xRatio = ( el.scrollLeft + el.clientWidth * a ) / el.scrollWidth;
+			const yRatio = ( el.scrollTop + el.clientHeight * b ) / el.scrollHeight;
+			
 			this.#canvas.width = w;
 			this.#canvas.height = h;		
 			this.#context.scale( this.#scale, this.#scale );
 			this.onRescale();
+			
+			el.scrollLeft = Math.floor( xRatio * el.scrollWidth - el.clientWidth * a );
+			el.scrollTop = Math.floor( yRatio * el.scrollHeight - el.clientHeight * b );
 		}
 	}
 
 	/**
 	 * Увеличение выбранного масштаба
 	 */
-	plusScale()
+	#plusScale()
 	{
 		this.#selector.focus();
 		let index = this.#selector.selectedIndex;
@@ -210,7 +266,7 @@ export class DrawingWorkplace
 	/**
 	 * Уменьшение выбранного масштаба
 	 */
-	minusScale()
+	#minusScale()
 	{
 		this.#selector.focus();
 		let index = this.#selector.selectedIndex;
@@ -222,4 +278,45 @@ export class DrawingWorkplace
 		}
 	}
 
+	/**
+	 * Обрабатывает масштабирование через колесо мыши + ctrl
+	 * @param {WheelEvent} event 
+	 */
+	#handleWheel( event )
+	{
+		if ( event.ctrlKey )
+		{
+			event.preventDefault();
+
+			if ( !this.#selector.disabled )
+			{
+				if ( event.deltaY > 0 )
+				{
+					this.#minusScale();
+				}
+				else
+				{
+					this.#plusScale();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Обрабатывает изменение положения мыши 
+	 * @param {MouseEvent} event 
+	 */
+	#handleMouseMove( event )
+	{
+		this.#mouseX = event.clientX;
+		this.#mouseY = event.clientY;
+	} 
+	
+	/** Обрабатывает изменение положения мыши */
+	#handleMouseLeave()
+	{
+		this.#mouseX = 0;
+		this.#mouseY = 0;
+	} 
+	 
 }

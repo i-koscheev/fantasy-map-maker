@@ -24,16 +24,16 @@ export class MapMaker
 	#state = States.NOTHING;
 
 	/**
-	 * Холст
-	 * @type {HTMLCanvasElement}
-	 */
-	#canvas;
-
-	/**
 	 * Модальное окно для ввода начальных размеров
 	 * @type {HTMLElement}
 	 */
 	#modal;
+
+	/**
+	 * Кликабельный контейнер для холста
+	 * @type {HTMLElement}
+	 */
+	#wrapper;
 
 	/**
 	 * Установка размеров
@@ -56,8 +56,9 @@ export class MapMaker
 	 * @param {Editor} editor Редактор карты
 	 */
 	constructor( canvas, form, editor )
-	{		
-		this.#canvas = canvas;
+	{
+		this.#wrapper = canvas.closest( ".clickable" );
+		// this.#setNothing();
 
 		this.#sizes = new SizeSetter( form, canvas );	
 		this.#modal = form.closest( ".modal" );
@@ -99,6 +100,7 @@ export class MapMaker
 				return;
 			}
 
+		this.#wrapper.style.display = "block";
 		this.#sizes.init();
 		this.#sizes.onSubmit = () => { this.#createNewMap(); };
 		this.#modal.style.display = "block";
@@ -144,8 +146,7 @@ export class MapMaker
 	/** Устанавливает внешний вид пустого состояния */
 	#setNothing()
 	{
-		this.#canvas.width = 0;
-		this.#canvas.height = 0;
+		this.#wrapper.style.display = "none";
 		this.#state = States.NOTHING;
 	}
 }

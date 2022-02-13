@@ -345,19 +345,24 @@ h2
 
 /* основное содержимое */
 
+.scrollable
+{
+	overflow: auto;
+}
+
 main
 {
 	grid-area: main;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 8rem;
-	overflow: auto;
 }
 
 	main > .clickable
 	{
+		display: none;
 		margin: auto;
+		padding: 50vh 50vw;
 	}
 
 .content-container

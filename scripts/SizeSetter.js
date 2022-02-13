@@ -40,6 +40,12 @@ export class SizeSetter
 	#element;
 
 	/**
+	 * Прокручиваемый контейнер
+	 * @type {HTMLElement}
+	 */
+	#wrapper;
+
+	/**
 	 * Действие после задания размеров
 	 * @type {() => void}
 	 */
@@ -61,6 +67,7 @@ export class SizeSetter
 	{
 		this.#form = form;
 		this.#element = element;
+		this.#wrapper = element.closest( ".scrollable" );
 
 		this.#form.addEventListener(
 			'submit',
@@ -141,11 +148,14 @@ export class SizeSetter
 		return input;
 	}
 
-	/** Обработывает изменения ширины */
+	/** Обрабатывает изменение ширины */
 	#resizeWidth()
 	{
+		const el = this.#wrapper;
+		const xRatio = ( el.scrollLeft + el.clientWidth / 2 ) / el.scrollWidth;
 		this.#width = getInt( this.#inputWidth );
 		this.#element.width = this.#width;
+		el.scrollLeft = Math.floor( xRatio * el.scrollWidth - el.clientWidth / 2 );
 	}
 
 	/** Инициализация поля ввода ширины */
@@ -155,6 +165,9 @@ export class SizeSetter
 		this.#inputWidth.disabled = false;
 		this.#width = Number( this.#inputWidth.defaultValue );
 		this.#element.width = this.#width;
+		
+		const el = this.#wrapper;
+		el.scrollLeft = Math.floor( ( el.scrollWidth - el.clientWidth ) / 2 );
 
 		this.#inputWidth.addEventListener(
 			"input",
@@ -165,8 +178,11 @@ export class SizeSetter
 	/** Обрабатывает изменение высоты */
 	#resizeHeight()
 	{
+		const el = this.#wrapper;
+		const yRatio = ( el.scrollTop + el.clientHeight / 2 ) / el.scrollHeight;
 		this.#height = getInt( this.#inputHeight );
 		this.#element.height = this.#height;
+		el.scrollTop = Math.floor( yRatio * el.scrollHeight - el.clientHeight / 2 );
 	}
 
 	/** Инициализация поля ввода высоты */
@@ -176,6 +192,9 @@ export class SizeSetter
 		this.#inputHeight.disabled = false;
 		this.#height = Number( this.#inputHeight.defaultValue );
 		this.#element.height = this.#height;
+		
+		const el = this.#wrapper;
+		el.scrollTop = Math.floor( ( el.scrollHeight - el.clientHeight ) / 2 );
 		
 		this.#inputHeight.addEventListener(
 			"input",

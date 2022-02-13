@@ -67,19 +67,19 @@ export class Editor
 	 * Обёртка для обработки событий мыши
 	 * @type {HTMLElement}
 	 */
-	 #wrapper;
+	#wrapper;
 
 	#svg;
 
 	#imageTracer;
 
-	#handleСlickBounded;
+	#handleСlickBound;
 
-	#handleMouseMoveBounded;
+	#handleMouseMoveBound;
 
-	#handleMouseEnterBounded;
+	#handleMouseEnterBound;
 
-	#handleMouseLeaveBounded;
+	#handleMouseLeaveBound;
 
 
 	/**
@@ -112,10 +112,10 @@ export class Editor
 
 		this.#cursor = new CircleCursor( this.#container );
 
-		this.#handleСlickBounded = this.#handleСlick.bind( this );
-		this.#handleMouseMoveBounded = this.#handleMouseMove.bind( this );
-		this.#handleMouseEnterBounded = this.#handleMouseEnter.bind( this );
-		this.#handleMouseLeaveBounded = this.#handleMouseLeave.bind( this );
+		this.#handleСlickBound = this.#handleСlick.bind( this );
+		this.#handleMouseMoveBound = this.#handleMouseMove.bind( this );
+		this.#handleMouseEnterBound = this.#handleMouseEnter.bind( this );
+		this.#handleMouseLeaveBound = this.#handleMouseLeave.bind( this );
 	}
 
 	/** Завершение работы */
@@ -255,19 +255,19 @@ export class Editor
 		this.#wrapper.style.cursor = "none";
 		this.#wrapper.addEventListener(
 			'mouseenter',
-			this.#handleMouseEnterBounded
+			this.#handleMouseEnterBound
 		);
 		this.#wrapper.addEventListener(
 			'mouseleave',
-			this.#handleMouseLeaveBounded
+			this.#handleMouseLeaveBound
 		);
 		this.#wrapper.addEventListener(
 			'mousemove',
-			this.#handleMouseMoveBounded
+			this.#handleMouseMoveBound
 		);
 		this.#wrapper.addEventListener(
 			"click",
-			this.#handleСlickBounded
+			this.#handleСlickBound
 		);
 	}
 
@@ -276,26 +276,30 @@ export class Editor
 	{
 		this.#wrapper.removeEventListener(
 			"click",
-			this.#handleСlickBounded
+			this.#handleСlickBound
 		);	
 		this.#wrapper.removeEventListener(
 			'mousemove',
-			this.#handleMouseMoveBounded
+			this.#handleMouseMoveBound
 		);
 		this.#wrapper.removeEventListener(
 			'mouseenter',
-			this.#handleMouseEnterBounded
+			this.#handleMouseEnterBound
 		);
 		this.#wrapper.removeEventListener(
 			'mouseleave',
-			this.#handleMouseLeaveBounded
+			this.#handleMouseLeaveBound
 		);
 		this.#wrapper.style.cursor = "default";
 	}
 
-	/** Обрабатывает наведение указателя */
-	#handleMouseEnter()
+	/**
+	 * Обрабатывает наведение указателя
+	 * @param {MouseEvent} event
+	 */
+	#handleMouseEnter( event )
 	{
+		this.#cursor.move( event.clientX, event.clientY );
 		this.#cursor.show();
 	}
 
@@ -311,9 +315,7 @@ export class Editor
 	 */
 	#handleMouseMove( event )
 	{
-		const x = event.clientX;
-		const y = event.clientY;
-		this.#cursor.move( x, y );
+		this.#cursor.move( event.clientX, event.clientY );
 	} 
 	
 	/**
