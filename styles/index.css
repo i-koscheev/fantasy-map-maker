@@ -53,8 +53,6 @@ header
 	border-bottom: 1px solid var(--darker-gray);	
 	font-size: 1rem;
 	background: var(--light-gray);
-
-	user-select: none;
 }
 
 h1

@@ -1,8 +1,6 @@
 import { Biomes, rusName, biomeName, BiomeView, Palette, BIOMES_COUNT } from "./Biomes.js";
 
-import { STYLES } from "./Styles.js";
-
-export const SVG_NS = "http://www.w3.org/2000/svg";
+import { STYLES, SVG_NS } from "./Styles.js";
 
 /**
  * Инструменты

@@ -1,7 +1,7 @@
-import { DrawingWorkplace } from "./DrawingWorkplace.js";
-import { Toolkit, SVG_NS } from "./Toolkit.js";
+import { DrawingWorkplace, Point } from "./DrawingWorkplace.js";
+import { Toolkit } from "./Toolkit.js";
 import { MapData } from "./MapData.js";
-import { STYLES } from "./Styles.js";
+import { STYLES, SVG_NS } from "./Styles.js";
 import { ImageTracer } from "./ImageTracer.js";
 
 /**
@@ -46,6 +46,12 @@ export class Editor
 	#drawingColor;
 
 	/**
+	 * Целочисленный размер кисти
+	 * @type {String}
+	 */
+	#intSize;
+
+	/**
 	 * Режим рисования
 	 * @type {boolean}
 	 */
@@ -56,6 +62,24 @@ export class Editor
 	 * @type {boolean}
 	 */
 	#hasChanged = false;
+
+	/**
+	 * Идёт ли рисование кистью в текущий момент
+	 * @type {boolean}
+	 */
+	#isDrawing = false;
+
+	/**
+	 * Продолжается ли рисование за пределами холста
+	 * @type {boolean}
+	 */
+	#isOutside = false;
+
+	/**
+	 * Последняя точка
+	 * @type {Point}
+	 */
+	#lastPoint;
 
 	/**
 	 * Указатель для рисования
@@ -75,25 +99,24 @@ export class Editor
 	 */
 	#grid;
 
-	/**
-	 * Высота при рисовании одной линии.
-	 * Нужна для холста с масштабом меньшим 1 для непрозрачной отрисовки
-	 * @type {number}
-	 */
-	#h = 1;
-
 	#svg;
 
 	#imageTracer;
 
 	#handleСlickBound;
 
+	#handleMouseDownBound;
+
 	#handleMouseMoveBound;
+
+	#handleMouseUpBound;
 
 	#handleMouseEnterBound;
 
 	#handleMouseLeaveBound;
 
+	/** @type { (event: Event) => void } */
+	#preventDefault = ( event ) => { event.preventDefault(); };
 
 	/**
 	 * Редактор карты
@@ -103,7 +126,7 @@ export class Editor
 	 * @parm {HTMLElement} container Родительский блок для холста
 	 */
 	constructor( workplace, toolkit, container )
-	{		
+	{
 		this.#toolkit = toolkit;
 		this.#workplace = workplace;
 		this.#container = container;
@@ -122,11 +145,16 @@ export class Editor
 		toolkit.onStyleChange = () => { this.#changeStyle(); };
 
 		toolkit.onPaintSizeChange = () => {
-			this.#cursor.resize( this.#toolkit.paintSize * this.#workplace.scale );
+			this.#intSize = Math.round( this.#toolkit.paintSize );
+			this.#cursor.resize( this.#intSize * this.#workplace.scale );
 		};
 
+		this.#wrapper.style.setProperty( "pointer-events", "auto" );
+		
 		this.#handleСlickBound = this.#handleСlick.bind( this );
+		this.#handleMouseDownBound = this.#handleMouseDown.bind( this );
 		this.#handleMouseMoveBound = this.#handleMouseMove.bind( this );
+		this.#handleMouseUpBound = this.#handleMouseUp.bind( this );
 		this.#handleMouseEnterBound = this.#handleMouseEnter.bind( this );
 		this.#handleMouseLeaveBound = this.#handleMouseLeave.bind( this );
 	}
@@ -157,6 +185,12 @@ export class Editor
 		this.#workplace.init( width, height );
 		this.#toolkit.init();
 
+		this.#wrapper.addEventListener(
+			'mouseenter',
+			( event ) => { this.#cursor.move( event.clientX, event.clientY ); },
+			{ once: true }
+		);
+
 		this.#newSvg();
 	}
 
@@ -169,6 +203,7 @@ export class Editor
 			( !biomeView.drawingСolor )
 			? biomeView.color.toHex()
 			: biomeView.drawingСolor.toHex();
+		this.#intSize = Math.round( this.#toolkit.paintSize );
 		
 		this.#drawingMode = true;
 		this.#hasChanged = false;
@@ -219,18 +254,15 @@ export class Editor
 		{	
 			const newScale = this.#workplace.scale;
 			this.#grid.rescale( newScale );
-			this.#h = Math.ceil( 1 / newScale );
 			this.#drawBiome();
-			this.#cursor.resize( this.#toolkit.paintSize * newScale );
+			this.#cursor.resize( this.#intSize * newScale );
 		}
 	}
 
 	/** Переносит на холст все области конкретной территории c текущей карты */
 	#drawBiome()
 	{
-		const ctx = this.#workplace.context;
-		const h = this.#h;
-		ctx.fillStyle = this.#drawingColor;
+		this.#workplace.color = this.#drawingColor;
 		for ( let y = 0; y < this.#mapData.height; y++ )
 		{
 			const add = y * this.#mapData.width;
@@ -250,7 +282,7 @@ export class Editor
 					if ( start !== -1 )
 					{
 						//линия закончилась
-						ctx.fillRect( start, y, (x - start), h );
+						this.#workplace.horizontalLine( start, x, y );
 						start = -1;
 					}
 				}
@@ -258,12 +290,12 @@ export class Editor
 			//случай в конце строки
 			if ( start !== -1 )
 			{
-				ctx.fillRect( start, y, (this.#mapData.width - start), h );
+				this.#workplace.horizontalLine( start, this.#mapData.width, y );
 			}
 		}
 	}
 
-	/** Присоединяет обработчики событий мыши */
+	/** Регистрирует обработчики событий мыши */
 	#addMouseEventListeners()
 	{
 		this.#wrapper.style.cursor = "none";
@@ -275,13 +307,25 @@ export class Editor
 			'mouseleave',
 			this.#handleMouseLeaveBound
 		);
-		this.#wrapper.addEventListener(
+		document.addEventListener(
+			'mouseup',
+			this.#handleMouseUpBound
+		);
+		document.addEventListener(
 			'mousemove',
 			this.#handleMouseMoveBound
 		);
 		this.#wrapper.addEventListener(
+			'mousedown',
+			this.#handleMouseDownBound
+		);
+		this.#wrapper.addEventListener(
 			"click",
 			this.#handleСlickBound
+		);
+		this.#wrapper.addEventListener(
+			"contextmenu",
+			this.#preventDefault
 		);
 	}
 
@@ -289,12 +333,24 @@ export class Editor
 	#removeMouseEventListeners()
 	{
 		this.#wrapper.removeEventListener(
+			"contextmenu",
+			this.#preventDefault
+		);
+		this.#wrapper.removeEventListener(
 			"click",
 			this.#handleСlickBound
-		);	
+		);
 		this.#wrapper.removeEventListener(
+			'mousedown',
+			this.#handleMouseDownBound
+		);
+		document.removeEventListener(
 			'mousemove',
 			this.#handleMouseMoveBound
+		);
+		document.removeEventListener(
+			'mouseup',
+			this.#handleMouseUpBound
 		);
 		this.#wrapper.removeEventListener(
 			'mouseenter',
@@ -304,55 +360,112 @@ export class Editor
 			'mouseleave',
 			this.#handleMouseLeaveBound
 		);
+		//прекращаем рисование, если оно происходило
+		this.#handleMouseUp();
+		this.#cursor.hide();
 		this.#wrapper.style.cursor = "default";
 	}
 
-	/**
-	 * Обрабатывает наведение указателя
-	 * @param {MouseEvent} event
-	 */
-	#handleMouseEnter( event )
+
+	/** Обрабатывает наведение указателя */
+	#handleMouseEnter()
 	{
-		this.#cursor.move( event.clientX, event.clientY );
-		this.#cursor.show();
+		if ( this.#isDrawing ) 
+		{
+			this.#isOutside = false;
+		}
+		else
+		{
+			this.#cursor.show();
+		}
 	}
 
-	/** Исчезновение указателя */
+	/** Обрабатывает исчезновение указателя */
 	#handleMouseLeave()
 	{
-		this.#cursor.hide();
+		if ( this.#isDrawing ) 
+		{
+			this.#isOutside = true;
+		}
+		else
+		{
+			this.#cursor.hide();
+		}
 	} 
 	
 	/**
-	 * Обрабатывает перемещение курсора по холсту
+	 * Обрабатывает нажатие кнопки мыши
+	 * @param {MouseEvent} event
+	 */
+	#handleMouseDown( event )
+	{
+		event.preventDefault();
+		this.#hasChanged = true;
+		this.#isDrawing = true;
+		this.#lastPoint = this.#workplace.canvasPoint(
+			event.clientX,
+			event.clientY
+		);
+		this.#cursor.up();
+		document.documentElement.style.setProperty( "cursor", "none" );
+		document.documentElement.style.setProperty( "pointer-events", "none" );
+	}
+
+	/**
+	 * Обрабатывает перемещение курсора (по всему документу)
 	 * @param {MouseEvent} event
 	 */
 	#handleMouseMove( event )
-	{
+	{	
 		this.#cursor.move( event.clientX, event.clientY );
-	} 
-	
+
+		if ( this.#isDrawing )
+		{
+			let currentPoint = this.#workplace.canvasPoint(
+				event.clientX,
+				event.clientY
+			);
+			const distance = distanceBetween( this.#lastPoint, currentPoint );
+			const angle = angleBetween( this.#lastPoint, currentPoint );
+			let x, y;
+			let step = Math.min( Math.ceil( this.#intSize / 8 ), 10 );
+			for ( let i = 0; i < distance; i+=step )
+			{
+				x = this.#lastPoint.x + ( Math.sin( angle ) * i );
+				y = this.#lastPoint.y + ( Math.cos( angle ) * i );
+				this.#drawCircle( x, y, this.#intSize );
+			}
+			this.#lastPoint = currentPoint;
+		}
+	}
+
+	/** Обрабатывает отпускание кнопки мыши */
+	#handleMouseUp()
+	{
+		if ( this.#isDrawing ) 
+		{
+			this.#isDrawing = false;
+			if ( this.#isOutside )
+			{
+				this.#cursor.hide();
+				this.#isOutside = false;
+			}
+			document.documentElement.style.removeProperty( "pointer-events" );
+			document.documentElement.style.removeProperty( "cursor" );
+			this.#cursor.down();
+		}		
+	}
+
 	/**
-	 * Обрабатывает клик по холсту
+	 * Обрабатывает одиночный клик по холсту
 	 * @param {MouseEvent} event
 	 */
 	#handleСlick( event )
 	{
-		if ( this.#drawingMode )
-		{
-			this.#hasChanged = true;
-
-			const rect = this.#workplace.canvas.getBoundingClientRect();
-		
-			const x = event.clientX - (rect.left + window.scrollX);
-			const y = event.clientY - (rect.top + window.scrollY);
-			const x0 = x / this.#workplace.scale;
-			const y0 = y / this.#workplace.scale;
-			
-			this.#drawCircle( x0, y0, this.#toolkit.paintSize );
-		}
+		this.#hasChanged = true;
+		const point = this.#workplace.canvasPoint( event.clientX, event.clientY );
+		this.#drawCircle( point.x, point.y, this.#intSize );
 	}
-
 	
 	/**
 	 * Горизонтальная линия
@@ -373,8 +486,7 @@ export class Editor
 				this.#mapData.data[i] = this.#biome;
 			}
 			
-			this.#workplace.context.fillStyle = this.#drawingColor;
-			this.#workplace.context.fillRect( x0, y, x1-x0, this.#h );
+			this.#workplace.horizontalLine( x0, x1, y );
 		}
 	}
 
@@ -387,12 +499,10 @@ export class Editor
 	 * Рисует круг на карте
 	 * @param {number} x0 координаты центра
 	 * @param {number} y0 координаты центра
-	 * @param {number} diameter диаметр
+	 * @param {number} d диаметр
 	 */
-	#drawCircle( x0, y0, diameter )
+	#drawCircle( x0, y0, d )
 	{
-		let d = Math.round( diameter );
-		
 		if ( d % 2 === 1 )
 		{
 			//случай с нечётным диаметром
@@ -472,6 +582,35 @@ export class Editor
 
 
 /**
+ * Расстояние между двумя точками
+ * @param {Point} point1 
+ * @param {Point} point2 
+ * @returns {number}
+ */
+function distanceBetween( point1, point2 )
+{
+	return Math.sqrt(
+		Math.pow( point2.x - point1.x, 2 ) 
+		+ Math.pow( point2.y - point1.y, 2 )
+	);
+}
+
+/**
+ * Угол (в радианах) между двумя точками
+ * @param {Point} point1 
+ * @param {Point} point2 
+ * @returns {number}
+ */
+function angleBetween( point1, point2 )
+{
+	return Math.atan2( 
+		point2.x - point1.x,
+		point2.y - point1.y
+	);
+}
+
+
+/**
  * Указатель мыши в виде окружности
  */
 class CircleCursor
@@ -541,6 +680,18 @@ class CircleCursor
 	hide()
 	{
 		this.#svg.style.display = "none";
+	}
+
+	/** Поднять */
+	up()
+	{
+		this.#svg.style.zIndex = "1";
+	}
+
+	/** Опустить */
+	down()
+	{
+		this.#svg.style.zIndex = "-1";
 	}
 
 	/**
