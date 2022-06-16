@@ -1,12 +1,12 @@
-import { Biomes, rusName, biomeName, BiomeView, Palette, BIOMES_COUNT } from "./Biomes.js";
+import { Biomes, rusName, biomeName, BiomeView, Palette, BIOMES_COUNT } from "../assets/Biomes.js";
 
-import { STYLES, SVG_NS } from "./Styles.js";
+import { STYLES, SVG_NS } from "../assets/Styles.js";
 
 /**
  * Инструменты
  * @enum {number}
  */
- const Tools = {
+const Tools = {
 	CURSOR: 0,
 	BRUSH: 1,
 	ERASER: 2,

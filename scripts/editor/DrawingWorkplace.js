@@ -25,7 +25,13 @@ export class DrawingWorkplace
 	 * Масштаб
 	 * @type {number}
 	 */
-	#scale = 1;
+	#scale;
+
+	/**
+	 * Масштаб по умолчанию
+	 * @type {number}
+	 */
+	#defaultScale = 1;
 
 	/**
 	 * Кнопка для приближения
@@ -108,7 +114,8 @@ export class DrawingWorkplace
 
 		//изначальный масштаб
 		this.#selector = selector;
-		this.#scale = Number( selector.value );
+		this.#defaultScale = Number( selector.value );
+		this.#scale = this.#defaultScale;
 
 		//прокручиваемый контейнер для рабочего пространства
 		this.#wrapper = canvas.closest( ".scrollable" );
@@ -143,7 +150,8 @@ export class DrawingWorkplace
 	 */
 	init( width, height )
 	{
-		this.#scale = Number( this.#selector.value );
+		// this.#scale = Number( this.#selector.value );
+		this.#selector.value = `${ this.#scale }`;
 		//устанавливаем изначальные размеры
 		this.#width = width;
 		this.#height = height;
@@ -184,6 +192,7 @@ export class DrawingWorkplace
 		{
 			this.#plusButton.disabled = true;
 		}
+		this.#selector.value = `${ this.#defaultScale }`;
 	}
 
 	/**

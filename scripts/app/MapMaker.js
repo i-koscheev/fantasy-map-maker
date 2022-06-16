@@ -1,6 +1,6 @@
 import { SizeSetter } from "./SizeSetter.js"
 
-import { Editor } from "./Editor.js"
+import { Editor } from "../editor/Editor.js"
 
 /**
  * Состояния приложения

@@ -1,6 +1,6 @@
 import { Biomes, BiomeView, Palette } from "./Biomes.js";
 
-import { Color } from "./Color.js";
+import { Color } from "../types/Color.js";
 
 /** Пространство имён SVG */
 export const SVG_NS = "http://www.w3.org/2000/svg";

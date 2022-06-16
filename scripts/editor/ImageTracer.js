@@ -1,7 +1,7 @@
-import {MapData} from "./MapData.js"
-import { Color } from "./Color.js";
-import {STYLES} from "./Styles.js"
-import { Biomes, rusName, biomeName, BiomeView, Palette, BIOMES_COUNT } from "./Biomes.js";
+import { MapData } from "../types/MapData.js"
+import { Color } from "../types/Color.js";
+import { STYLES } from "../assets/Styles.js"
+import { Biomes, rusName, biomeName, BiomeView, Palette, BIOMES_COUNT } from "../assets/Biomes.js";
 
 
 /**

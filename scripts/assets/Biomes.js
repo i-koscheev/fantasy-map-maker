@@ -1,4 +1,4 @@
-import { Color } from "./Color.js";
+import { Color } from "../types/Color.js";
 
 /** Количество непустых биомов */
 export const BIOMES_COUNT = 8;

@@ -151,11 +151,9 @@ export class SizeSetter
 	/** Обрабатывает изменение ширины */
 	#resizeWidth()
 	{
-		const el = this.#wrapper;
-		const xRatio = ( el.scrollLeft + el.clientWidth / 2 ) / el.scrollWidth;
 		this.#width = getInt( this.#inputWidth );
 		this.#element.width = this.#width;
-		el.scrollLeft = Math.floor( xRatio * el.scrollWidth - el.clientWidth / 2 );
+		this.#scrollingX();
 	}
 
 	/** Инициализация поля ввода ширины */
@@ -166,8 +164,7 @@ export class SizeSetter
 		this.#width = Number( this.#inputWidth.defaultValue );
 		this.#element.width = this.#width;
 		
-		const el = this.#wrapper;
-		el.scrollLeft = Math.floor( ( el.scrollWidth - el.clientWidth ) / 2 );
+		this.#scrollingX();
 
 		this.#inputWidth.addEventListener(
 			"input",
@@ -178,11 +175,9 @@ export class SizeSetter
 	/** Обрабатывает изменение высоты */
 	#resizeHeight()
 	{
-		const el = this.#wrapper;
-		const yRatio = ( el.scrollTop + el.clientHeight / 2 ) / el.scrollHeight;
 		this.#height = getInt( this.#inputHeight );
 		this.#element.height = this.#height;
-		el.scrollTop = Math.floor( yRatio * el.scrollHeight - el.clientHeight / 2 );
+		this.#scrollingY();
 	}
 
 	/** Инициализация поля ввода высоты */
@@ -193,8 +188,7 @@ export class SizeSetter
 		this.#height = Number( this.#inputHeight.defaultValue );
 		this.#element.height = this.#height;
 		
-		const el = this.#wrapper;
-		el.scrollTop = Math.floor( ( el.scrollHeight - el.clientHeight ) / 2 );
+		this.#scrollingY();
 		
 		this.#inputHeight.addEventListener(
 			"input",
@@ -213,6 +207,22 @@ export class SizeSetter
 				this.onSubmit();
 			},
 			{ once: true }
+		);
+	}
+
+	/** Горизонтальная прокрутка  */
+	#scrollingX()
+	{
+		this.#wrapper.scrollLeft = Math.floor( 
+			( this.#wrapper.scrollWidth - this.#wrapper.clientWidth ) / 2
+		);
+	}
+
+	/** Вертикальная прокрутка  */
+	#scrollingY()
+	{
+		this.#wrapper.scrollTop = Math.floor( 
+			( this.#wrapper.scrollHeight - this.#wrapper.clientHeight ) / 2
 		);
 	}
 }

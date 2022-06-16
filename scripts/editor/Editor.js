@@ -1,7 +1,7 @@
 import { DrawingWorkplace, Point } from "./DrawingWorkplace.js";
 import { Toolkit } from "./Toolkit.js";
-import { MapData } from "./MapData.js";
-import { STYLES, SVG_NS } from "./Styles.js";
+import { MapData } from "../types/MapData.js";
+import { STYLES, SVG_NS } from "../assets/Styles.js";
 import { ImageTracer } from "./ImageTracer.js";
 
 /**

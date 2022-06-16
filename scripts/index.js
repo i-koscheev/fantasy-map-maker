@@ -1,8 +1,8 @@
-import { DrawingWorkplace } from "./DrawingWorkplace.js";
-import { Toolkit } from "./Toolkit.js";
-import { Editor } from "./Editor.js";
-import { MapMaker } from "./MapMaker.js";
-import { MainMenu } from "./MainMenu.js";
+import { DrawingWorkplace } from "./editor/DrawingWorkplace.js";
+import { Toolkit } from "./editor/Toolkit.js";
+import { Editor } from "./editor/Editor.js";
+import { MapMaker } from "./app/MapMaker.js";
+import { MainMenu } from "./app/MainMenu.js";
 
 function main()
 {
